@@ -947,174 +947,176 @@ export default function Sidebar({ isDark: isDarkProp, onThemeToggle }) {
           </div>
         </div>
 
-        {/* ── Search ── */}
-        <div className="search__wrapper">
-          <SearchIcon />
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Search..."
-            aria-label="Search"
-            value={rawSearch}
-            onFocus={handleSearchFocus}
-            onChange={handleSearchChange}
-          />
-        </div>
-
-        {searchQuery ? (
-          <div className="sidebar-links sidebar-links--top">
-            <ul>
-              {getGlobalSearchResults().map((item, idx) => (
-                <li key={idx}>
-                  <a
-                    href={item.path}
-                    className="tooltip"
-                    data-label={item.label}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigate(item.path);
-                      setRawSearch("");
-                    }}
-                  >
-                    <SearchIcon />
-                    <div className="link hide" style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2, padding: '4px 0' }}>
-                      <span style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>{item.label}</span>
-                      <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>{item.subLabel}</span>
-                    </div>
-                    <span className="tooltip__content">{item.label}</span>
-                  </a>
-                </li>
-              ))}
-              {getGlobalSearchResults().length === 0 && (
-                <li>
-                  <div className="link hide" style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                    No results found
-                  </div>
-                </li>
-              )}
-            </ul>
+        <div className="sidebar-middle" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', msOverflowStyle: 'none', scrollbarWidth: 'none', display: 'flex', flexDirection: 'column' }}>
+          {/* ── Search ── */}
+          <div className="search__wrapper">
+            <SearchIcon />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search..."
+              aria-label="Search"
+              value={rawSearch}
+              onFocus={handleSearchFocus}
+              onChange={handleSearchChange}
+            />
           </div>
-        ) : (
-          <>
-            {/* ── Top Nav Links ── */}
+
+          {searchQuery ? (
             <div className="sidebar-links sidebar-links--top">
               <ul>
-                {NAV_TOP.map(({ id, label, notification, badge }) => (
-                  <li key={id} className={isLinkHidden(label) ? "search-hidden" : ""}>
+                {getGlobalSearchResults().map((item, idx) => (
+                  <li key={idx}>
                     <a
-                      href={id}
-                      className={`tooltip${activeLink === id ? " active" : ""}`}
-                      data-label={label}
+                      href={item.path}
+                      className="tooltip"
+                      data-label={item.label}
                       onClick={(e) => {
                         e.preventDefault();
-                        navigate(id);
+                        navigate(item.path);
+                        setRawSearch("");
                       }}
                     >
-                      {NAV_ICONS[id]}
-                      {notification && <span className="notification">{notification}</span>}
-                      <span className="link hide">{label}</span>
-                      {badge && <span className="badge hide">{badge}</span>}
-                      <span className="tooltip__content">{label}</span>
+                      <SearchIcon />
+                      <div className="link hide" style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2, padding: '4px 0' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>{item.label}</span>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>{item.subLabel}</span>
+                      </div>
+                      <span className="tooltip__content">{item.label}</span>
                     </a>
                   </li>
                 ))}
-              </ul>
-            </div>
-
-            <div className="separator" />
-
-            {/* ── Routes ── */}
-            <div className="sidebar-links routes sidebar-links--gray">
-              <ul>
-                {ROUTES.map(({ id, label, color }) => (
-                  <li key={id} className={isLinkHidden(label) ? "search-hidden" : ""}>
-                    <a
-                      href={id}
-                      className={`tooltip${activeLink === id ? " active" : ""}`}
-                      data-label={label}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        navigate(id);
-                      }}
-                    >
-                      <span className={`route__marker route__marker--${color}`} />
-                      <span className="link hide">{label}</span>
-                      <span className="tooltip__content">{label}</span>
-                    </a>
+                {getGlobalSearchResults().length === 0 && (
+                  <li>
+                    <div className="link hide" style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                      No results found
+                    </div>
                   </li>
-                ))}
-                <li className={isLinkHidden("Add Route") ? "search-hidden" : ""}>
-                  <a
-                    href="#add-route"
-                    className="tooltip"
-                    data-label="Add Route"
-                    onClick={(e) => e.preventDefault()}
-                  >
-                    <AddRouteIcon />
-                    <span className="link hide">Add Route</span>
-                    <span className="tooltip__content">Add Route</span>
-                  </a>
-                </li>
+                )}
               </ul>
             </div>
-          </>
-        )}
-
-        {/* ── Bottom Nav ── */}
-        <div className="sidebar-links sidebar-links--bottom sidebar-links--gray relative">
-          <ul>
-            <li className={isLinkHidden("Settings") ? "search-hidden" : ""}>
-              <a
-                href="#settings"
-                ref={settingsBtnRef}
-                className={`tooltip${settingsOpen ? " active" : ""}`}
-                data-label="Settings"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setSettingsOpen(prev => !prev);
-                }}
-              >
-                <SettingsIcon />
-                <span className="link hide">Settings</span>
-                <span className="tooltip__content">Settings</span>
-              </a>
-              {settingsOpen && (
-                <div 
-                  ref={settingsDropdownRef}
-                  className="absolute bottom-full left-4 mb-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] w-[210px] p-2 z-[60]"
-                >
-                  <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest px-3 pt-2 pb-2">Auto Refresh Interval</p>
-                  <div className="grid grid-cols-3 gap-1.5 p-1">
-                    {['1m', '5m', '15m', '30m', '1H', '4H', '8H'].map(time => (
-                      <button
-                        key={time}
-                        onClick={(e) => { e.stopPropagation(); setRefreshInterval(time); setSettingsOpen(false); }}
-                        className={`text-[12px] font-bold py-2 rounded-lg transition-colors border ${refreshInterval === time ? 'bg-[var(--accent)] text-white border-[var(--accent)]' : 'bg-[var(--bg-page)] text-[var(--text-primary)] border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)]'}`}
+          ) : (
+            <>
+              {/* ── Top Nav Links ── */}
+              <div className="sidebar-links sidebar-links--top">
+                <ul>
+                  {NAV_TOP.map(({ id, label, notification, badge }) => (
+                    <li key={id} className={isLinkHidden(label) ? "search-hidden" : ""}>
+                      <a
+                        href={id}
+                        className={`tooltip${activeLink === id ? " active" : ""}`}
+                        data-label={label}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate(id);
+                        }}
                       >
-                        {time}
-                      </button>
-                    ))}
+                        {NAV_ICONS[id]}
+                        {notification && <span className="notification">{notification}</span>}
+                        <span className="link hide">{label}</span>
+                        {badge && <span className="badge hide">{badge}</span>}
+                        <span className="tooltip__content">{label}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="separator" />
+
+              {/* ── Routes ── */}
+              <div className="sidebar-links routes sidebar-links--gray">
+                <ul>
+                  {ROUTES.map(({ id, label, color }) => (
+                    <li key={id} className={isLinkHidden(label) ? "search-hidden" : ""}>
+                      <a
+                        href={id}
+                        className={`tooltip${activeLink === id ? " active" : ""}`}
+                        data-label={label}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate(id);
+                        }}
+                      >
+                        <span className={`route__marker route__marker--${color}`} />
+                        <span className="link hide">{label}</span>
+                        <span className="tooltip__content">{label}</span>
+                      </a>
+                    </li>
+                  ))}
+                  <li className={isLinkHidden("Add Route") ? "search-hidden" : ""}>
+                    <a
+                      href="#add-route"
+                      className="tooltip"
+                      data-label="Add Route"
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      <AddRouteIcon />
+                      <span className="link hide">Add Route</span>
+                      <span className="tooltip__content">Add Route</span>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </>
+          )}
+
+          {/* ── Bottom Nav ── */}
+          <div className="sidebar-links sidebar-links--bottom sidebar-links--gray relative">
+            <ul>
+              <li className={isLinkHidden("Settings") ? "search-hidden" : ""}>
+                <a
+                  href="#settings"
+                  ref={settingsBtnRef}
+                  className={`tooltip${settingsOpen ? " active" : ""}`}
+                  data-label="Settings"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setSettingsOpen(prev => !prev);
+                  }}
+                >
+                  <SettingsIcon />
+                  <span className="link hide">Settings</span>
+                  <span className="tooltip__content">Settings</span>
+                </a>
+                {settingsOpen && (
+                  <div 
+                    ref={settingsDropdownRef}
+                    className="absolute bottom-full left-4 mb-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] w-[210px] p-2 z-[60]"
+                  >
+                    <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest px-3 pt-2 pb-2">Auto Refresh Interval</p>
+                    <div className="grid grid-cols-3 gap-1.5 p-1">
+                      {['1m', '5m', '15m', '30m', '1H', '4H', '8H'].map(time => (
+                        <button
+                          key={time}
+                          onClick={(e) => { e.stopPropagation(); setRefreshInterval(time); setSettingsOpen(false); }}
+                          className={`text-[12px] font-bold py-2 rounded-lg transition-colors border ${refreshInterval === time ? 'bg-[var(--accent)] text-white border-[var(--accent)]' : 'bg-[var(--bg-page)] text-[var(--text-primary)] border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)]'}`}
+                        >
+                          {time}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </li>
-            
-            <li className={isLinkHidden("Support") ? "search-hidden" : ""}>
-              <a
-                href="#support"
-                className="tooltip"
-                data-label="Support"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setSupportOpen(true);
-                }}
-              >
-                <SupportIcon />
-                <span className="link hide">Support</span>
-                <span className="tooltip__content">Support</span>
-              </a>
-            </li>
-          </ul>
+                )}
+              </li>
+              
+              <li className={isLinkHidden("Support") ? "search-hidden" : ""}>
+                <a
+                  href="#support"
+                  className="tooltip"
+                  data-label="Support"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setSupportOpen(true);
+                  }}
+                >
+                  <SupportIcon />
+                  <span className="link hide">Support</span>
+                  <span className="tooltip__content">Support</span>
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
 
         <div className="separator" />
