@@ -947,7 +947,7 @@ export default function Sidebar({ isDark: isDarkProp, onThemeToggle }) {
           </div>
         </div>
 
-        <div className="sidebar-middle" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', msOverflowStyle: 'none', scrollbarWidth: 'none', display: 'flex', flexDirection: 'column' }}>
+        <div className="sidebar-middle" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
           {/* ── Search ── */}
           <div className="search__wrapper">
             <SearchIcon />
