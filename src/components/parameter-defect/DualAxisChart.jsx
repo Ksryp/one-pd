@@ -77,6 +77,7 @@ export default function DualAxisChart() {
             width={40}
           />
           <Tooltip content={<CustomTooltip />} />
+          <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
 
           {/* UCL/LCL for first selected param */}
           {selectedParameter.includes('viscosity_v0') && (

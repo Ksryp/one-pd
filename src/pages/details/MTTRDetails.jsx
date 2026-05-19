@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts'
 
 const data = [
   { day: 'Mon', mttr: 18 },
@@ -46,6 +46,7 @@ export default function MTTRDetails() {
               <XAxis dataKey="day" stroke="var(--text-secondary)" fontSize={12} tickLine={false} />
               <YAxis stroke="var(--text-secondary)" fontSize={12} tickLine={false} axisLine={false} />
               <Tooltip contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)', borderRadius: '8px' }} />
+              <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 'bold' }} />
               <Line type="monotone" dataKey="mttr" stroke="#DC2626" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} name="MTTR (min)" />
               <ReferenceLine y={24} stroke="#9CA3AF" strokeDasharray="4 4" />
             </LineChart>

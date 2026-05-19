@@ -429,7 +429,7 @@ const CSS = `
 
 /* Nav links */
 .sidebar-root .sidebar-links--top {
-  margin-top: 1.25rem; overflow-y: auto; min-height: 0;
+  margin-top: 1.25rem; min-height: 0;
 }
 .sidebar-root .sidebar-links ul {
   list-style: none; display: flex; flex-direction: column; gap: 0.375rem;
@@ -499,8 +499,7 @@ const CSS = `
 .sidebar-root.dark .tooltip .tooltip__content::after {
   border-color: transparent var(--tooltip-bg) transparent transparent;
 }
-.sidebar-root.collapsed .tooltip:hover .tooltip__content,
-.sidebar-root.collapsed .tooltip:focus-within .tooltip__content {
+.sidebar-root.collapsed .tooltip:hover .tooltip__content {
   visibility: visible; opacity: 1;
 }
 
@@ -743,10 +742,43 @@ export default function Sidebar({ isDark: isDarkProp, onThemeToggle }) {
   const [refreshInterval, setRefreshInterval] = useState("15m");
   const settingsBtnRef = useRef(null);
   const settingsDropdownRef = useRef(null);
+  const sidebarRef = useRef(null);
 
-  // ── Click outside ──
+  // ── Swipe & Click outside logic ──
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
   useEffect(() => {
+    const handleTouchStart = (e) => {
+      touchStartX.current = e.changedTouches[0].screenX;
+    };
+    const handleTouchMove = (e) => {
+      touchEndX.current = e.changedTouches[0].screenX;
+    };
+    const handleTouchEnd = (e) => {
+      const distance = touchEndX.current - touchStartX.current;
+      if (distance < -50) {
+        // Swipe left -> collapse
+        setCollapsed(true);
+      }
+      if (distance > 50) {
+        // Swipe right -> expand if starting from left edge OR if touched on sidebar
+        if (touchStartX.current < 100 || (sidebarRef.current && sidebarRef.current.contains(e.target))) {
+          setCollapsed(false);
+        }
+      }
+    };
+
     const handleClick = (e) => {
+      // Collapse sidebar if clicking outside of it
+      if (
+        sidebarRef.current && 
+        !sidebarRef.current.contains(e.target) &&
+        !supportOpen // Don't collapse if support modal is open
+      ) {
+        setCollapsed(true);
+      }
+
       if (
         !profileDropdownRef.current?.contains(e.target) &&
         !profileMenuBtnRef.current?.contains(e.target)
@@ -766,9 +798,18 @@ export default function Sidebar({ isDark: isDarkProp, onThemeToggle }) {
         setSettingsOpen(false);
       }
     };
+
     document.addEventListener("click", handleClick);
-    return () => document.removeEventListener("click", handleClick);
-  }, []);
+    document.addEventListener("touchstart", handleTouchStart);
+    document.addEventListener("touchmove", handleTouchMove);
+    document.addEventListener("touchend", handleTouchEnd);
+    return () => {
+      document.removeEventListener("click", handleClick);
+      document.removeEventListener("touchstart", handleTouchStart);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [supportOpen]);
 
   const handleToggleProfile = useCallback((e) => {
     e.stopPropagation();
@@ -825,18 +866,22 @@ export default function Sidebar({ isDark: isDarkProp, onThemeToggle }) {
       {/* Inject scoped CSS */}
       <style>{CSS}</style>
 
-      <nav className="sidebar">
-        {/* ── Expand Button ── */}
-        <button
-          className="expand-btn"
-          type="button"
-          aria-expanded={!collapsed}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          onClick={() => setCollapsed((prev) => !prev)}
-        >
-          <ChevronRightIcon />
-        </button>
-
+      <nav 
+        className="sidebar"
+        ref={sidebarRef}
+        onClick={(e) => {
+          // If clicking exactly on the nav or empty areas (not buttons/links inside)
+          if (
+            e.target.tagName !== 'BUTTON' && 
+            e.target.tagName !== 'A' && 
+            e.target.closest('a') === null && 
+            e.target.closest('button') === null && 
+            e.target.tagName !== 'INPUT'
+          ) {
+            setCollapsed(prev => !prev);
+          }
+        }}
+      >
         {/* ── Logo / Company Switcher ── */}
         <div className="sidebar-top">
           <button
@@ -1098,7 +1143,7 @@ export default function Sidebar({ isDark: isDarkProp, onThemeToggle }) {
         </button>
 
         {/* ── Profile ── */}
-        <div className="sidebar__profile">
+        <div className="sidebar__profile tooltip">
           <div
             className="avatar__wrapper"
             role="button"
@@ -1124,6 +1169,8 @@ export default function Sidebar({ isDark: isDarkProp, onThemeToggle }) {
             <div className="user-name">{currentUser.name}</div>
             <div className="email">{currentUser.role} · {currentUser.email}</div>
           </div>
+
+          <span className="tooltip__content">Profile</span>
 
           <button
             ref={profileMenuBtnRef}

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
 const data = [
   { time: '08:00', casting: 400, drying: 600, spraying: 300, total: 1300 },
@@ -55,6 +55,7 @@ export default function WIPDetails() {
             <XAxis dataKey="time" stroke="var(--text-secondary)" fontSize={12} tickLine={false} />
             <YAxis stroke="var(--text-secondary)" fontSize={12} tickLine={false} axisLine={false} />
             <Tooltip contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)', borderRadius: '8px' }} />
+            <Legend verticalAlign="top" height={36} iconType="square" wrapperStyle={{ fontSize: '12px', fontWeight: 'bold' }} />
             <Area type="monotone" dataKey="casting" stackId="1" stroke="#DC2626" fill="#FEE2E2" name="Casting" />
             <Area type="monotone" dataKey="drying" stackId="1" stroke="#D97706" fill="#FEF3C7" name="Drying" />
             <Area type="monotone" dataKey="spraying" stackId="1" stroke="#16A34A" fill="#DCFCE7" name="Spraying" />

@@ -3,10 +3,10 @@ import YieldDonut from '../yield/YieldDonut'
 import { notifications, yield_ } from '../../data/mock'
 import { useState } from 'react'
 
-const VIEWS = ['Today', 'Yesterday', 'Week']
+const VIEWS = ['Day', 'Week', 'Month', 'Year']
 
 export default function NotificationPanel() {
-  const [yieldView, setYieldView] = useState('Today')
+  const [yieldView, setYieldView] = useState('Day')
   const unresolved = notifications.filter(n => !n.resolved).length
 
   return (
@@ -33,12 +33,9 @@ export default function NotificationPanel() {
 
       {/* Clay Yield */}
       <div className="mb-5">
-        <div className="flex items-center justify-between mb-1">
-          <span /> {/* spacer for yield title inside component */}
-          <ViewSelector value={yieldView} onChange={setYieldView} />
-        </div>
         <YieldDonut
           title="Clay Yield"
+          headerAction={<ViewSelector value={yieldView} onChange={setYieldView} />}
           value={yield_.clay.value}
           segments={[
             { label: 'Good',   value: yield_.clay.good,   color: '#16A34A' },
@@ -53,11 +50,9 @@ export default function NotificationPanel() {
 
       {/* Firing Yield */}
       <div className="mb-5">
-        <div className="flex items-center justify-end mb-1">
-          <ViewSelector value={yieldView} onChange={setYieldView} />
-        </div>
         <YieldDonut
           title="Firing Yield"
+          headerAction={<ViewSelector value={yieldView} onChange={setYieldView} />}
           value={yield_.firing.value}
           segments={[
             { label: 'Good',   value: yield_.firing.good,   color: '#16A34A' },
@@ -130,7 +125,7 @@ function ProductionMetrics() {
           <p className="text-[11px] text-[var(--text-secondary)] tabular-nums">836,058 KG</p>
         </div>
         <div className="text-right">
-          <ViewSelector value="Today" onChange={() => {}} />
+          <ViewSelector value="Day" onChange={() => {}} />
         </div>
       </div>
     </div>

@@ -7,7 +7,7 @@ export function DashboardProvider({ children }) {
   const [selectedDate, setSelectedDate] = useState('today')
   const [selectedDefect, setSelectedDefect] = useState('all')
   const [selectedParameter, setSelectedParameter] = useState(['viscosity_v0'])
-  const [selectedModel, setSelectedModel] = useState('SNK-MES-v1')
+  const [selectedModel, setSelectedModel] = useState(['All'])
   const [selectedView, setSelectedView] = useState('hour')
   const [rightPanelOpen, setRightPanelOpen] = useState(false)
 

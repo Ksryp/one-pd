@@ -19,7 +19,7 @@ const CustomTooltip = ({ active, payload }) => {
   )
 }
 
-export default function YieldDonut({ title, value, segments, target }) {
+export default function YieldDonut({ title, value, segments, target, headerAction }) {
   const [hovered, setHovered] = useState(false)
   const navigate = useNavigate()
   const isAboveTarget = value >= target
@@ -28,17 +28,24 @@ export default function YieldDonut({ title, value, segments, target }) {
 
   return (
     <div
-      className={`relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer
-        ${hovered ? 'shadow-xl scale-[1.02]' : 'shadow-sm scale-100 border-transparent'}`}
+      className={`relative overflow-hidden rounded-xl border bg-[var(--bg-card)] transition-all duration-300 cursor-pointer
+        ${hovered ? 'shadow-xl scale-[1.02]' : 'shadow-sm scale-100'}`}
       style={hovered ? { borderColor: ctaColor, boxShadow: `0 8px 28px ${ctaColor}28` } : { borderColor: 'var(--border)' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={() => navigate('/reports')}
     >
-      <div className="p-0">
-        <h3 className="text-[12px] font-bold tracking-widest text-[var(--text-primary)] uppercase mb-3 px-0">
-          {title}
-        </h3>
+      <div className="p-4 pb-10">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-[12px] font-bold tracking-widest text-[var(--text-primary)] uppercase m-0">
+            {title}
+          </h3>
+          {headerAction && (
+            <div onClick={e => e.stopPropagation()} className="relative z-10">
+              {headerAction}
+            </div>
+          )}
+        </div>
 
         <div className="flex items-center gap-4">
           {/* Donut */}

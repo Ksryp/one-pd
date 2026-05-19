@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
 const data = [
   { time: '08:00', oee: 72, avail: 80, perf: 85, qual: 98 },
@@ -56,6 +56,7 @@ export default function OEEDetails() {
             <XAxis dataKey="time" stroke="var(--text-secondary)" fontSize={12} tickLine={false} />
             <YAxis stroke="var(--text-secondary)" fontSize={12} tickLine={false} axisLine={false} domain={[60, 100]} />
             <Tooltip contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)', borderRadius: '8px' }} />
+            <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 'bold' }} />
             <Line type="monotone" dataKey="oee" stroke="#16A34A" strokeWidth={4} dot={{ r: 4 }} activeDot={{ r: 6 }} name="OEE %" />
             <Line type="monotone" dataKey="avail" stroke="#4F8EE8" strokeWidth={2} dot={false} name="Availability %" />
             <Line type="monotone" dataKey="perf" stroke="#16A34A" strokeWidth={2} strokeDasharray="4 4" dot={false} name="Performance %" />
