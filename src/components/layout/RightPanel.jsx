@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { useDashboard } from '../../context/DashboardContext'
+import { notifications } from '../../data/mock'
 
 export default function RightPanel({ children }) {
   const { rightPanelOpen, setRightPanelOpen } = useDashboard()
+  const unresolvedCount = notifications.filter(n => !n.resolved).length
+  const hasUnresolved = unresolvedCount > 0
   const [isMobile, setIsMobile] = useState(false)
   const startX = useRef(null)
   const drawerRef = useRef(null)
@@ -39,11 +42,19 @@ export default function RightPanel({ children }) {
         id="right-panel-fab"
         onClick={() => setRightPanelOpen(true)}
         className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-[var(--accent)] text-white shadow-2xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
-        aria-label="Open notifications panel"
+        aria-label="Open info panel"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path d="M18 20a6 6 0 00-12 0" /><circle cx="12" cy="10" r="4" />
+        {/* Info icon */}
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="8" strokeWidth={2.5} strokeLinecap="round" />
+          <line x1="12" y1="11" x2="12" y2="17" />
         </svg>
+
+        {/* Red dot — แสดงเมื่อมี unresolved notifications */}
+        {hasUnresolved && (
+          <span className="absolute top-2 right-2 w-3 h-3 rounded-full bg-[#DC2626] border-2 border-white" />
+        )}
       </button>
 
       {/* Backdrop */}
