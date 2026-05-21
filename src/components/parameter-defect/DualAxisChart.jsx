@@ -1,6 +1,6 @@
 import {
   ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ReferenceLine, ResponsiveContainer, Dot
+  Tooltip, Legend, ReferenceLine, ResponsiveContainer,
 } from 'recharts'
 import { useDashboard } from '../../context/DashboardContext'
 import { parameterDefect } from '../../data/mock'
@@ -19,13 +19,6 @@ const PARAM_KEYS = {
   moisture:      'moisture',
 }
 
-const CustomDot = (props) => {
-  const { cx, cy, payload, dataKey } = props
-  const key = dataKey.replace('_v30', '_v0').replace('_', '_')
-  const isOver = payload[`over${dataKey.charAt(0).toUpperCase() + dataKey.slice(1)}`]
-  if (!isOver) return null
-  return <Dot cx={cx} cy={cy} r={4} fill="#DC2626" stroke="#fff" strokeWidth={1.5} />
-}
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null

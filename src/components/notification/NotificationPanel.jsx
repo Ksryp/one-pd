@@ -1,6 +1,6 @@
 import AlertCard from './AlertCard'
 import YieldDonut from '../yield/YieldDonut'
-import { notifications, yield_ } from '../../data/mock'
+import { notifications, yield_, metrics } from '../../data/mock'
 import { useState } from 'react'
 
 const VIEWS = ['Day', 'Week', 'Month', 'Year']
@@ -66,7 +66,7 @@ export default function NotificationPanel() {
       <div className="h-px bg-[var(--border)] mb-5" />
 
       {/* Production Metrics */}
-      <ProductionMetrics />
+      <ProductionMetrics data={metrics} />
     </div>
   )
 }
@@ -100,32 +100,35 @@ function ViewSelector({ value, onChange }) {
   )
 }
 
-function ProductionMetrics() {
+function ProductionMetrics({ data }) {
+  const [metricsView, setMetricsView] = useState('Day')
+  const { slipIn, slipYield, warehouseIn } = data
+
   return (
     <div>
       <div className="flex items-start justify-between mb-3">
         <div>
           <p className="text-[11px] text-[var(--text-secondary)] uppercase tracking-wider">Slip In</p>
           <p className="text-fluid-xl font-black tabular-nums text-[var(--text-primary)]">
-            {(67400).toLocaleString()} <span className="text-[13px] font-semibold text-[var(--text-secondary)]">Piece</span>
+            {slipIn.pieces.toLocaleString()} <span className="text-[13px] font-semibold text-[var(--text-secondary)]">Piece</span>
           </p>
-          <p className="text-[11px] text-[var(--text-secondary)] tabular-nums">1,341,260 KG</p>
+          <p className="text-[11px] text-[var(--text-secondary)] tabular-nums">{slipIn.kg.toLocaleString()} KG</p>
         </div>
         <div className="text-right">
           <p className="text-[11px] text-[var(--text-secondary)] uppercase tracking-wider">Slip Yield</p>
-          <p className="text-fluid-5xl font-black tabular-nums text-[var(--text-primary)]">62%</p>
+          <p className="text-fluid-5xl font-black tabular-nums text-[var(--text-primary)]">{slipYield.value}%</p>
         </div>
       </div>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-[11px] text-[var(--text-secondary)] uppercase tracking-wider">Warehouse In</p>
           <p className="text-fluid-xl font-black tabular-nums text-[var(--text-primary)]">
-            {(42013).toLocaleString()} <span className="text-[13px] font-semibold text-[var(--text-secondary)]">Piece</span>
+            {warehouseIn.pieces.toLocaleString()} <span className="text-[13px] font-semibold text-[var(--text-secondary)]">Piece</span>
           </p>
-          <p className="text-[11px] text-[var(--text-secondary)] tabular-nums">836,058 KG</p>
+          <p className="text-[11px] text-[var(--text-secondary)] tabular-nums">{warehouseIn.kg.toLocaleString()} KG</p>
         </div>
         <div className="text-right">
-          <ViewSelector value="Day" onChange={() => {}} />
+          <ViewSelector value={metricsView} onChange={setMetricsView} />
         </div>
       </div>
     </div>

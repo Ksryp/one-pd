@@ -1,13 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { stageParams } from '../data/mock'
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
-
-const STATUS_MAP = {
-  EMERGENCY:   { bg: '#FEE2E2', text: '#991B1B', border: '#DC2626' },
-  ABNORMAL:    { bg: '#FEF3C7', text: '#92400E', border: '#D97706' },
-  NORMAL:      { bg: '#DCFCE7', text: '#166534', border: '#16A34A' },
-  MAINTENANCE: { bg: '#F3F4F6', text: '#374151', border: '#9CA3AF' },
-}
+import { STATUS_COLORS as STATUS_MAP } from '../constants/status'
 
 function GaugeParam({ param }) {
   const { label, value, unit, ucl, lcl, status } = param

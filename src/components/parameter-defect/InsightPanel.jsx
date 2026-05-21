@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { parameterDefect } from '../../data/mock'
 
 export default function InsightPanel() {
@@ -12,7 +12,7 @@ export default function InsightPanel() {
       <InsightCard title="Peak Defect" hoverColor="#DC2626">
         <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-1">
           {peakDefect.byType.map((t) => (
-            <React.Fragment key={t.name}>
+            <Fragment key={t.name}>
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-[#4F8EE8] font-medium">{t.name}</span>
                 <span className="text-[11px] font-bold tabular-nums text-[var(--text-primary)]">{t.count.toLocaleString()}</span>
@@ -21,7 +21,7 @@ export default function InsightPanel() {
                 <span className="text-[11px] text-[var(--text-secondary)]">{t.subType}</span>
                 <span className="text-[11px] font-bold tabular-nums text-[var(--text-primary)]">{t.subCount.toLocaleString()}</span>
               </div>
-            </React.Fragment>
+            </Fragment>
           ))}
         </div>
       </InsightCard>

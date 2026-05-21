@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNK MES - Detailed Architecture Layers</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0D1117 0%, #161B22 100%);
+            color: #E6EDF3;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #4F8EE8, #1E6FCC);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #8B949E;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #6B7280;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .architecture-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .layer-section {
+            position: relative;
+        }
+
+        .layer-section::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 100%;
+            width: 2px;
+            height: 20px;
+            background: linear-gradient(to bottom, #4F8EE8, transparent);
+            transform: translateX(-1px);
+        }
+
+        .layer-section:last-child::before {
+            display: none;
+        }
+
+        .layer-box {
+            background: linear-gradient(135deg, rgba(79, 142, 232, 0.1), rgba(79, 195, 247, 0.05));
+            border: 2px solid #4F8EE8;
+            border-radius: 12px;
+            padding: 30px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .layer-box:hover {
+            background: linear-gradient(135deg, rgba(79, 142, 232, 0.15), rgba(79, 195, 247, 0.1));
+            box-shadow: 0 0 30px rgba(79, 142, 232, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .layer-box.backend {
+            border-color: #58A6FF;
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(88, 166, 255, 0.05));
+        }
+
+        .layer-box.backend:hover {
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.15), rgba(88, 166, 255, 0.1));
+            box-shadow: 0 0 30px rgba(88, 166, 255, 0.2);
+        }
+
+        .layer-box.database {
+            border-color: #FFA726;
+            background: linear-gradient(135deg, rgba(255, 167, 38, 0.1), rgba(255, 167, 38, 0.05));
+        }
+
+        .layer-box.database:hover {
+            background: linear-gradient(135deg, rgba(255, 167, 38, 0.15), rgba(255, 167, 38, 0.1));
+            box-shadow: 0 0 30px rgba(255, 167, 38, 0.2);
+        }
+
+        .layer-box.infra {
+            border-color: #AB47BC;
+            background: linear-gradient(135deg, rgba(171, 71, 188, 0.1), rgba(171, 71, 188, 0.05));
+        }
+
+        .layer-box.infra:hover {
+            background: linear-gradient(135deg, rgba(171, 71, 188, 0.15), rgba(171, 71, 188, 0.1));
+            box-shadow: 0 0 30px rgba(171, 71, 188, 0.2);
+        }
+
+        .layer-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .layer-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background: rgba(79, 142, 232, 0.2);
+            border: 2px solid #4F8EE8;
+            color: #4F8EE8;
+            font-weight: 700;
+            font-size: 20px;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .layer-box.backend .layer-number {
+            background: rgba(88, 166, 255, 0.2);
+            border-color: #58A6FF;
+            color: #58A6FF;
+        }
+
+        .layer-box.database .layer-number {
+            background: rgba(255, 167, 38, 0.2);
+            border-color: #FFA726;
+            color: #FFA726;
+        }
+
+        .layer-box.infra .layer-number {
+            background: rgba(171, 71, 188, 0.2);
+            border-color: #AB47BC;
+            color: #AB47BC;
+        }
+
+        .layer-info h2 {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+
+        .layer-info p {
+            color: #8B949E;
+            font-size: 13px;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .item-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 14px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .item-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(79, 142, 232, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .item-name {
+            font-weight: 600;
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: #E6EDF3;
+        }
+
+        .item-type {
+            font-size: 11px;
+            color: #8B949E;
+        }
+
+        .item-icon {
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #4F8EE8;
+            margin-right: 5px;
+        }
+
+        .descriptions {
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 3px solid rgba(79, 142, 232, 0.5);
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #8B949E;
+        }
+
+        .layer-box.backend .descriptions {
+            border-left-color: rgba(88, 166, 255, 0.5);
+        }
+
+        .layer-box.database .descriptions {
+            border-left-color: rgba(255, 167, 38, 0.5);
+        }
+
+        .layer-box.infra .descriptions {
+            border-left-color: rgba(171, 71, 188, 0.5);
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tech-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(79, 142, 232, 0.15);
+            border: 1px solid rgba(79, 142, 232, 0.3);
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 11px;
+            color: #4F8EE8;
+            font-weight: 500;
+        }
+
+        .tech-badge.backend {
+            background: rgba(88, 166, 255, 0.15);
+            border-color: rgba(88, 166, 255, 0.3);
+            color: #58A6FF;
+        }
+
+        .tech-badge.database {
+            background: rgba(255, 167, 38, 0.15);
+            border-color: rgba(255, 167, 38, 0.3);
+            color: #FFA726;
+        }
+
+        .tech-badge.infra {
+            background: rgba(171, 71, 188, 0.15);
+            border-color: rgba(171, 71, 188, 0.3);
+            color: #AB47BC;
+        }
+
+        .flow-diagram {
+            margin: 50px 0;
+            padding: 30px;
+            background: #0D1117;
+            border: 1px solid #30363D;
+            border-radius: 12px;
+        }
+
+        .flow-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #E6EDF3;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(79, 142, 232, 0.1);
+            border-left: 3px solid #4F8EE8;
+            border-radius: 6px;
+        }
+
+        .flow-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: #4F8EE8;
+            color: #0D1117;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .flow-content {
+            flex: 1;
+        }
+
+        .flow-title-text {
+            font-weight: 600;
+            font-size: 13px;
+            color: #E6EDF3;
+            margin-bottom: 3px;
+        }
+
+        .flow-desc {
+            font-size: 12px;
+            color: #8B949E;
+        }
+
+        .integration-map {
+            margin: 50px 0;
+        }
+
+        .map-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+        }
+
+        .map-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #4F8EE8, #1E6FCC);
+            border-radius: 2px;
+            margin-right: 12px;
+        }
+
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .map-card {
+            background: #0D1117;
+            border: 1px solid #30363D;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .map-card:hover {
+            border-color: #4F8EE8;
+            box-shadow: 0 0 15px rgba(79, 142, 232, 0.1);
+        }
+
+        .map-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #4F8EE8;
+            margin-bottom: 10px;
+        }
+
+        .map-items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .map-item {
+            font-size: 12px;
+            color: #8B949E;
+            padding-left: 12px;
+            border-left: 2px solid rgba(79, 142, 232, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .items-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+
+            .layer-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .layer-number {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>SNK MES Dashboard</h1>
+            <p>Complete Layered Architecture</p>
+            <div class="subtitle">Frontend → Backend → Database → Infrastructure</div>
+        </div>
+
+        <!-- Main Architecture Stack -->
+        <div class="architecture-stack">
+            <!-- Layer 1: Frontend -->
+            <div class="layer-section">
+                <div class="layer-box">
+                    <div class="layer-header">
+                        <div class="layer-number">1</div>
+                        <div class="layer-info">
+                            <h2>Frontend Layer (Client Side)</h2>
+                            <p>React UI Components, State Management, Routing</p>
+                        </div>
+                    </div>
+
+                    <div class="items-grid">
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Pages</div>
+                            <div class="item-type">Dashboard, StageDetail, Alerts, Reports, Settings</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Components</div>
+                            <div class="item-type">Cards, Charts, Panels, Sidebar, RightPanel</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>State Management</div>
+                            <div class="item-type">Context API, useState, DashboardContext</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Routing</div>
+                            <div class="item-type">React Router v6, Navigation, URL Mapping</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Styling</div>
+                            <div class="item-type">Tailwind CSS, CSS Variables, Dark Mode</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Charts</div>
+                            <div class="item-type">Recharts, PieChart, ComposedChart, DualAxis</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>User Input</div>
+                            <div class="item-type">Forms, Filters, Dropdowns, Button Actions</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Browser APIs</div>
+                            <div class="item-type">localStorage, DOM API, Event Listeners</div>
+                        </div>
+                    </div>
+
+                    <div class="descriptions">
+                        <strong>Frontend ประกอบด้วย:</strong><br>
+                        • User Interface - ทุกสิ่งที่ผู้ใช้เห็น (Dashboard, Charts, Alerts)<br>
+                        • React Components - ชิ้นส่วน UI ที่นำมาใช้ซ้ำได้ (YieldDonut, OEECard, etc.)<br>
+                        • State Management - เก็บข้อมูลแอปพลิเคชัน (Theme, Filters, Selected Data)<br>
+                        • Client-side Routing - Navigator ระหว่างหน้าต่างๆ (Dashboard → StageDetail)<br>
+                        • Styling & Theme - Tailwind CSS + CSS Variables สำหรับธีมเข้ม/สว่าง
+                    </div>
+
+                    <div class="tech-stack">
+                        <span class="tech-badge">React 18</span>
+                        <span class="tech-badge">React Router v6</span>
+                        <span class="tech-badge">Tailwind CSS</span>
+                        <span class="tech-badge">Recharts</span>
+                        <span class="tech-badge">Vite</span>
+                        <span class="tech-badge">Context API</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Layer 2: Backend API -->
+            <div class="layer-section">
+                <div class="layer-box backend">
+                    <div class="layer-header">
+                        <div class="layer-number">2</div>
+                        <div class="layer-info">
+                            <h2>Backend Layer (Server Side)</h2>
+                            <p>API Endpoints, Business Logic, Data Processing</p>
+                        </div>
+                    </div>
+
+                    <div class="items-grid">
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>API Endpoints</div>
+                            <div class="item-type">REST API (Future), GraphQL</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Production Data</div>
+                            <div class="item-type">Real-time Status, Current Metrics</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Historical Data</div>
+                            <div class="item-type">Trends, Analytics, Historical Logs</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Stage Metrics</div>
+                            <div class="item-type">Per-stage OEE, Takt, WIP Calculation</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Defect Analysis</div>
+                            <div class="item-type">Detection, Classification, Clustering</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Alert Engine</div>
+                            <div class="item-type">Rules, Notifications, Thresholds</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Report Generation</div>
+                            <div class="item-type">PDF Export, Data Aggregation</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Authentication</div>
+                            <div class="item-type">JWT, User Management, Permissions</div>
+                        </div>
+                    </div>
+
+                    <div class="descriptions">
+                        <strong>Backend ประกอบด้วย:</strong><br>
+                        • API Server - ให้ข้อมูลแก่ Frontend (REST/GraphQL endpoints)<br>
+                        • Business Logic - คำนวณ OEE, Takt Time, WIP, Defect Analysis<br>
+                        • Data Processing - แปลงข้อมูลจาก MES ให้พร้อมสำหรับ UI<br>
+                        • Alert Engine - ตรวจสอบ Thresholds และส่ง Notifications<br>
+                        • Authentication - ยืนยันตัวตน User และ Authorization<br>
+                        • Report Generator - สร้าง Reports, PDF Export
+                    </div>
+
+                    <div class="tech-stack">
+                        <span class="tech-badge backend">Node.js / Express</span>
+                        <span class="tech-badge backend">Python / FastAPI</span>
+                        <span class="tech-badge backend">REST API</span>
+                        <span class="tech-badge backend">WebSocket</span>
+                        <span class="tech-badge backend">JWT Auth</span>
+                        <span class="tech-badge backend">Caching (Redis)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Layer 3: Database -->
+            <div class="layer-section">
+                <div class="layer-box database">
+                    <div class="layer-header">
+                        <div class="layer-number">3</div>
+                        <div class="layer-info">
+                            <h2>Database Layer (Data Storage)</h2>
+                            <p>Persistent Data, Time Series, Configuration</p>
+                        </div>
+                    </div>
+
+                    <div class="items-grid">
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Relational DB</div>
+                            <div class="item-type">PostgreSQL, MySQL - Structured Data</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Time Series DB</div>
+                            <div class="item-type">InfluxDB, TimescaleDB - Production Metrics</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Production Data</div>
+                            <div class="item-type">Current Status, Real-time Values, Equipment State</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Historical Data</div>
+                            <div class="item-type">Archive, Trends, Time Series Logs</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>User Data</div>
+                            <div class="item-type">Credentials, Preferences, Permissions</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Alert Rules</div>
+                            <div class="item-type">Threshold Config, Alert Templates</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Defect Data</div>
+                            <div class="item-type">Classification, Patterns, Root Causes</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Cache Layer</div>
+                            <div class="item-type">Redis - Session, Frequent Queries</div>
+                        </div>
+                    </div>
+
+                    <div class="descriptions">
+                        <strong>Database ประกอบด้วย:</strong><br>
+                        • Relational Database - จัดเก็บข้อมูลที่มีโครงสร้าง (Users, Alerts, Configuration)<br>
+                        • Time Series Database - เก็บข้อมูลการวัดแบบเวลา (Production Metrics, Trends)<br>
+                        • Production Data - สถานะเครื่องจักรปัจจุบัน, Parameter Values<br>
+                        • Historical Archive - บันทึกข้อมูลเก่าเพื่อการวิเคราะห์<br>
+                        • Cache Layer - เก็บข้อมูลที่มีการใช้บ่อยสำหรับการเข้าถึงที่เร็ว
+                    </div>
+
+                    <div class="tech-stack">
+                        <span class="tech-badge database">PostgreSQL</span>
+                        <span class="tech-badge database">InfluxDB</span>
+                        <span class="tech-badge database">Redis</span>
+                        <span class="tech-badge database">MongoDB</span>
+                        <span class="tech-badge database">TimescaleDB</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Layer 4: Infrastructure -->
+            <div class="layer-section">
+                <div class="layer-box infra">
+                    <div class="layer-header">
+                        <div class="layer-number">4</div>
+                        <div class="layer-info">
+                            <h2>Infrastructure Layer (DevOps & Operations)</h2>
+                            <p>Deployment, Monitoring, Security, Scalability</p>
+                        </div>
+                    </div>
+
+                    <div class="items-grid">
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Container</div>
+                            <div class="item-type">Docker, Container Registry</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Orchestration</div>
+                            <div class="item-type">Kubernetes, Docker Compose</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Cloud Platform</div>
+                            <div class="item-type">AWS, Azure, GCP, On-premise</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Load Balancer</div>
+                            <div class="item-type">Nginx, HAProxy, Cloud LB</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Monitoring</div>
+                            <div class="item-type">Prometheus, Grafana, ELK Stack</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Logging</div>
+                            <div class="item-type">Centralized Logs, Aggregation</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Security</div>
+                            <div class="item-type">SSL/TLS, Firewalls, Secrets Management</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>CI/CD</div>
+                            <div class="item-type">GitHub Actions, GitLab CI, Jenkins</div>
+                        </div>
+                    </div>
+
+                    <div class="descriptions">
+                        <strong>Infrastructure ประกอบด้วย:</strong><br>
+                        • Containerization - Docker สำหรับ Deployment ที่สม่ำเสมอ<br>
+                        • Orchestration - Kubernetes สำหรับ Auto-scaling และ Management<br>
+                        • Cloud/On-premise - ที่อยู่ของ Servers (AWS, Azure, หรือ Data Center)<br>
+                        • Load Balancing - จัดสรรการร้องขออย่างเท่าเทียม<br>
+                        • Monitoring & Logging - ติดตามประสิทธิภาพและ Error Logs<br>
+                        • Security - Encryption, Firewall, Authentication Tokens<br>
+                        • CI/CD Pipeline - Automated Testing, Building, Deployment
+                    </div>
+
+                    <div class="tech-stack">
+                        <span class="tech-badge infra">Docker</span>
+                        <span class="tech-badge infra">Kubernetes</span>
+                        <span class="tech-badge infra">AWS / Azure</span>
+                        <span class="tech-badge infra">GitHub Actions</span>
+                        <span class="tech-badge infra">Prometheus</span>
+                        <span class="tech-badge infra">Grafana</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Layer 5: External Systems -->
+            <div class="layer-section">
+                <div class="layer-box" style="border-color: #81C784; background: linear-gradient(135deg, rgba(129, 199, 132, 0.1), rgba(129, 199, 132, 0.05));">
+                    <div class="layer-header">
+                        <div class="layer-number" style="background: rgba(129, 199, 132, 0.2); border-color: #81C784; color: #81C784;">5</div>
+                        <div class="layer-info">
+                            <h2>External Systems & Integrations</h2>
+                            <p>Third-party Services, MES Integration, IoT Devices</p>
+                        </div>
+                    </div>
+
+                    <div class="items-grid">
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>MES System</div>
+                            <div class="item-type">SNK Factory MES, Production Data Feed</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>IoT Sensors</div>
+                            <div class="item-type">Equipment Sensors, Temperature, Humidity</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>SCADA Systems</div>
+                            <div class="item-type">Real-time Equipment Control, Status</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Email Service</div>
+                            <div class="item-type">Alert Notifications, Reports Distribution</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>SMS/Telegram</div>
+                            <div class="item-type">Emergency Alerts, Quick Notifications</div>
+                        </div>
+                        <div class="item-card">
+                            <div class="item-name"><span class="item-icon"></span>Analytics Tools</div>
+                            <div class="item-type">Google Analytics, Mixpanel (Optional)</div>
+                        </div>
+                    </div>
+
+                    <div class="descriptions">
+                        <strong>External Systems:</strong><br>
+                        • MES Integration - เชื่อมต่อกับระบบ MES เดิมของโรงงาน SNK<br>
+                        • IoT Sensors - รับข้อมูลจากเครื่องจักร, สภาพแวดล้อม<br>
+                        • SCADA Systems - การควบคุมและติดตามเรียลไทม์<br>
+                        • Notification Services - ส่ง Alert ผ่าน Email, SMS, Telegram<br>
+                        • Analytics - วิเคราะห์พฤติกรรมผู้ใช้ (Optional)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Flow Section -->
+        <div class="flow-diagram">
+            <div class="flow-title">📊 Data Flow Through Layers</div>
+
+            <div class="flow-step">
+                <div class="flow-number">1</div>
+                <div class="flow-content">
+                    <div class="flow-title-text">User Interaction (Frontend)</div>
+                    <div class="flow-desc">ผู้ใช้คลิกปุ่ม, เลือก Filter, หรือไปยังหน้าอื่น → Frontend capture event</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="flow-number">2</div>
+                <div class="flow-content">
+                    <div class="flow-title-text">State Update (Frontend)</div>
+                    <div class="flow-desc">Context State เปลี่ยน → Components re-render ด้วยข้อมูลใหม่</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="flow-number">3</div>
+                <div class="flow-content">
+                    <div class="flow-title-text">API Request (Frontend → Backend)</div>
+                    <div class="flow-desc">Frontend ส่ง HTTP Request ไปยัง Backend API เพื่อขอข้อมูล</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="flow-number">4</div>
+                <div class="flow-content">
+                    <div class="flow-title-text">Backend Processing</div>
+                    <div class="flow-desc">Backend ประมวลผล Request → Query Database → Calculate Metrics</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="flow-number">5</div>
+                <div class="flow-content">
+                    <div class="flow-title-text">Database Query (Backend → Database)</div>
+                    <div class="flow-desc">Backend ส่ง SQL Query ไปยัง Database เพื่อดึงข้อมูล</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="flow-number">6</div>
+                <div class="flow-content">
+                    <div class="flow-title-text">Data Response (Database → Backend)</div>
+                    <div class="flow-desc">Database ส่ง Data กลับมายัง Backend → Backend แปลงเป็น JSON</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="flow-number">7</div>
+                <div class="flow-content">
+                    <div class="flow-title-text">API Response (Backend → Frontend)</div>
+                    <div class="flow-desc">Backend ส่ง JSON Response กลับมายัง Frontend</div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="flow-number">8</div>
+                <div class="flow-content">
+                    <div class="flow-title-text">UI Render (Frontend)</div>
+                    <div class="flow-desc">Frontend update State → Components re-render → Display ข้อมูลใหม่บนหน้าจอ</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integration Map -->
+        <div class="integration-map">
+            <div class="map-title">🔗 Layer Integration Points</div>
+            <div class="map-grid">
+                <div class="map-card">
+                    <div class="map-label">Frontend ↔ Backend</div>
+                    <div class="map-items">
+                        <div class="map-item">REST API calls (fetch, axios)</div>
+                        <div class="map-item">JSON data exchange</div>
+                        <div class="map-item">WebSocket real-time updates</div>
+                        <div class="map-item">JWT authentication tokens</div>
+                    </div>
+                </div>
+
+                <div class="map-card">
+                    <div class="map-label">Backend ↔ Database</div>
+                    <div class="map-items">
+                        <div class="map-item">SQL queries</div>
+                        <div class="map-item">ORM (TypeORM, SQLAlchemy)</div>
+                        <div class="map-item">Connection pooling</div>
+                        <div class="map-item">Transaction management</div>
+                    </div>
+                </div>
+
+                <div class="map-card">
+                    <div class="map-label">Backend ↔ External</div>
+                    <div class="map-items">
+                        <div class="map-item">MES API integration</div>
+                        <div class="map-item">Webhook listeners</div>
+                        <div class="map-item">Message queues (RabbitMQ)</div>
+                        <div class="map-item">Email/SMS APIs</div>
+                    </div>
+                </div>
+
+                <div class="map-card">
+                    <div class="map-label">Infrastructure ↔ All</div>
+                    <div class="map-items">
+                        <div class="map-item">Container networking</div>
+                        <div class="map-item">Service discovery</div>
+                        <div class="map-item">Environment variables</div>
+                        <div class="map-item">Health checks & logging</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Scroll animation
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'slideIn 0.6s ease forwards';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.layer-box').forEach(layer => {
+            observer.observe(layer);
+        });
+
+        document.querySelectorAll('.flow-step').forEach((step, index) => {
+            observer.observe(step);
+            step.style.animationDelay = `${index * 0.1}s`;
+        });
+
+        // Add CSS animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .layer-box {
+                animation: slideIn 0.6s ease forwards;
+            }
+
+            .flow-step {
+                animation: slideIn 0.6s ease forwards;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

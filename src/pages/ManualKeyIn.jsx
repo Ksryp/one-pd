@@ -1,160 +1,119 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-
-const STAGES = [
+const FORMS = [
   {
-    id: 'prep-body',
-    title: '1.1 Preparation - Body Slip',
-    fields: [
-      { id: 'moisture', label: '% Moisture Raw Material', placeholder: '24.5', unit: '%' },
-      { id: 'concentration', label: 'Concentration', placeholder: '1.65', unit: 'g/cm³' },
-      { id: 'v0', label: 'V0', placeholder: '120', unit: 'mL' },
-      { id: 'v30', label: 'V30', placeholder: '135', unit: 'mL' },
-      { id: 'rust', label: 'Rust Screening', placeholder: 'Pass', unit: '' },
-      { id: 'temp', label: 'Temperature', placeholder: '28', unit: '°C' },
-      { id: 'casting_rate', label: 'Casting Rate', placeholder: '4.5', unit: 'mm/min' },
-      { id: 'viscosity', label: 'Viscosity', placeholder: '320', unit: 'Poise' },
-      { id: 'thixo', label: 'Thixotrophy', placeholder: '15', unit: 'Poise' },
-    ]
+    id: 'body-slip',
+    title: 'Body Slip Parameter',
+    subtitle: 'SNK — Slip Preparation',
+    description: 'บันทึกค่าพารามิเตอร์ Body Slip ประจำวัน เช่น Viscosity, Concentration, Casting Rate และ Temperature',
+    url: 'https://teams.microsoft.com/l/message/48:notes/1779310942343?context=%7B%22contextType%22%3A%22chat%22%2C%22oid%22%3A%228%3Aorgid%3A744e8bef-91d0-4710-80f4-c1825b9a8e26%22%7D',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+        <line x1="10" y1="9" x2="8" y2="9"/>
+      </svg>
+    ),
+    color: '#1E6FCC',
+    bgLight: '#EFF6FF',
+    tag: 'Microsoft Teams',
   },
   {
-    id: 'prep-glaze',
-    title: '1.2 Preparation - Glaze Slip',
-    fields: [
-      { id: 'glaze_conc', label: 'Concentration', placeholder: '1.80', unit: 'g/cm³' },
-      { id: 'particle', label: '% Particle Size Distribution', placeholder: '1.2', unit: '%' },
-      { id: 'glaze_v0', label: 'V0', placeholder: '115', unit: 'mL' },
-      { id: 'glaze_v30', label: 'V30', placeholder: '125', unit: 'mL' },
-      { id: 'glaze_rust', label: 'Rust Screening', placeholder: 'Pass', unit: '' },
-      { id: 'thickness', label: 'Color Thickness', placeholder: '0.8', unit: 'mm' },
-      { id: 'surface', label: 'Color & Surface Testing', placeholder: 'OK', unit: '' },
-      { id: 'residue', label: '% Residue', placeholder: '0.05', unit: '%' },
-    ]
+    id: 'glaze-slip',
+    title: 'Glaze Slip Data',
+    subtitle: 'SNK — Glaze Preparation',
+    description: 'บันทึกข้อมูล Glaze Slip ประจำวัน เช่น Concentration, Particle Size, Thickness และ Residue',
+    url: 'https://forms.office.com/r/CRaB7JDX3x',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        <line x1="13" y1="15" x2="17" y2="15"/>
+        <line x1="13" y1="19" x2="17" y2="19"/>
+        <line x1="13" y1="12" x2="13.01" y2="12"/>
+      </svg>
+    ),
+    color: '#7C3AED',
+    bgLight: '#F5F3FF',
+    tag: 'Microsoft Forms',
   },
-  {
-    id: 'casting',
-    title: '2. Casting',
-    fields: [
-      { id: 'cast_date', label: 'Casting Date', placeholder: 'DD/MM/YYYY', unit: '' },
-      { id: 'caster_no', label: 'Caster NO.', placeholder: 'C-042', unit: '' },
-      { id: 'mold_no', label: 'Mold NO.', placeholder: 'M-105', unit: '' },
-      { id: 'mold_cycle', label: 'Mold Cycle', placeholder: '45', unit: 'cycles' },
-    ]
-  },
-  {
-    id: 'drying',
-    title: '3. Drying',
-    fields: [
-      { id: 'drying_curve', label: 'Drying Curve', placeholder: 'Standard A', unit: '' },
-      { id: 'moisture_content', label: '% Moisture Content', placeholder: '1.5', unit: '%' },
-      { id: 'energy', label: 'Energy Consumption', placeholder: '1250', unit: 'kWh' },
-    ]
-  },
-  {
-    id: 'clay_insp',
-    title: '4. Clay Inspection',
-    fields: [
-      { id: 'clay_yield', label: '% Yield', placeholder: '98.5', unit: '%' },
-    ]
-  },
-  {
-    id: 'spraying',
-    title: '5. Spraying',
-    fields: [
-      { id: 'spray_shift', label: 'Spray Shift/Date', placeholder: 'Shift A - 19/05', unit: '' },
-      { id: 'spray_thick', label: 'Thickness', placeholder: '0.85', unit: 'mm' },
-      { id: 'sprayer_no', label: 'Sprayer NO.', placeholder: 'S-012', unit: '' },
-      { id: 'robot_no', label: 'Robot NO.', placeholder: 'R-03', unit: '' },
-    ]
-  },
-  {
-    id: 'firing',
-    title: '6. Firing',
-    fields: [
-      { id: 'fire_temp', label: 'Temperature', placeholder: '1200', unit: '°C' },
-      { id: 'fire_cycle', label: 'Firing Cycle', placeholder: '12', unit: 'hrs' },
-      { id: 'weight', label: 'Weight', placeholder: '18.5', unit: 'kg' },
-      { id: 'smart_meter', label: 'Smart Meter', placeholder: '450', unit: 'kWh' },
-    ]
-  },
-  {
-    id: 'glost_insp',
-    title: '7. Glost Inspection',
-    fields: [
-      { id: 'glost_yield', label: '% Yield', placeholder: '95.2', unit: '%' },
-    ]
-  }
 ]
 
 export default function ManualKeyIn() {
-  const navigate = useNavigate()
-  const [activeStage, setActiveStage] = useState(STAGES[0].id)
-
-  const currentStage = STAGES.find(s => s.id === activeStage)
-
   return (
     <div className="p-4 sm:p-6 lg:p-8 min-h-full bg-[var(--bg-page)] flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-fluid-2xl font-black text-[var(--text-primary)] mb-2">Manual Data Entry</h1>
-          <p className="text-fluid-sm text-[var(--text-secondary)]">Please input production parameters carefully.</p>
-        </div>
-        <button className="px-5 py-2.5 bg-[var(--accent)] hover:bg-[#155fc2] text-white font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-          Save All Data
-        </button>
+      <div className="mb-8">
+        <h1 className="text-fluid-2xl font-black text-[var(--text-primary)] mb-2">Manual Key-In</h1>
+        <p className="text-fluid-sm text-[var(--text-secondary)]">
+          เลือกหัวข้อที่ต้องการกรอกข้อมูล — ระบบจะเปิด Microsoft Forms สำหรับบันทึก
+        </p>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
-        {/* Sidebar Nav for Stages */}
-        <div className="w-full lg:w-64 flex-shrink-0 flex flex-col gap-1">
-          {STAGES.map((stage) => (
-            <button
-              key={stage.id}
-              onClick={() => setActiveStage(stage.id)}
-              className={`text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 border ${
-                activeStage === stage.id
-                  ? 'bg-[var(--accent)] text-white border-transparent shadow-md'
-                  : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]'
-              }`}
-            >
-              {stage.title}
-            </button>
-          ))}
-        </div>
+      {/* Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
+        {FORMS.map((form) => (
+          <a
+            key={form.id}
+            href={form.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-sm
+                       hover:shadow-md hover:border-[var(--accent)] transition-all duration-200
+                       cursor-pointer flex flex-col overflow-hidden no-underline"
+          >
+            {/* Card Top Bar */}
+            <div
+              className="h-1.5 w-full"
+              style={{ backgroundColor: form.color }}
+            />
 
-        {/* Input Form Area */}
-        <div className="flex-1 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-sm flex flex-col overflow-hidden">
-          <div className="p-5 border-b border-[var(--border)] bg-opacity-50">
-            <h2 className="text-lg font-bold text-[var(--text-primary)]">{currentStage.title}</h2>
-          </div>
-          
-          <div className="p-5 overflow-y-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {currentStage.fields.map((field) => (
-                <div key={field.id} className="flex flex-col gap-1.5">
-                  <label htmlFor={field.id} className="text-[13px] font-bold text-[var(--text-primary)]">
-                    {field.label}
-                  </label>
-                  <div className="relative flex items-center">
-                    <input
-                      id={field.id}
-                      type="text"
-                      placeholder={`e.g. ${field.placeholder}`}
-                      className="w-full bg-[var(--bg-page)] border border-[var(--border)] text-[var(--text-primary)] text-[15px] font-semibold tabular-nums rounded-lg pl-3 pr-12 py-2.5 outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all"
-                    />
-                    {field.unit && (
-                      <span className="absolute right-3 text-[12px] font-bold text-[var(--text-secondary)] select-none pointer-events-none">
-                        {field.unit}
-                      </span>
-                    )}
-                  </div>
+            <div className="p-6 flex flex-col gap-4 flex-1">
+              {/* Icon + Tag row */}
+              <div className="flex items-start justify-between">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-200"
+                  style={{ backgroundColor: form.bgLight, color: form.color }}
+                >
+                  {form.icon}
                 </div>
-              ))}
+                <span
+                  className="text-[11px] font-bold px-2.5 py-1 rounded-full border"
+                  style={{
+                    color: form.color,
+                    backgroundColor: form.bgLight,
+                    borderColor: form.color + '33',
+                  }}
+                >
+                  {form.tag}
+                </span>
+              </div>
+
+              {/* Text */}
+              <div>
+                <h2 className="text-[17px] font-black text-[var(--text-primary)] mb-0.5 group-hover:text-[var(--accent)] transition-colors">
+                  {form.title}
+                </h2>
+                <p className="text-[12px] font-semibold text-[var(--text-secondary)] mb-3">
+                  {form.subtitle}
+                </p>
+                <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
+                  {form.description}
+                </p>
+              </div>
+
+              {/* CTA */}
+              <div className="mt-auto pt-2 flex items-center gap-1.5 text-[13px] font-bold" style={{ color: form.color }}>
+                <span>เปิดแบบฟอร์ม</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  className="transform group-hover:translate-x-1 transition-transform duration-200">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
             </div>
-          </div>
-        </div>
+          </a>
+        ))}
       </div>
     </div>
   )

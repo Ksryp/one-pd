@@ -1,5 +1,4 @@
 import DualAxisChart from '../components/parameter-defect/DualAxisChart'
-import { DashboardProvider } from '../context/DashboardContext'
 
 export default function Reports() {
   return (

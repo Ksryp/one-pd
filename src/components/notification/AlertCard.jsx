@@ -1,11 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-
-const LEVEL_MAP = {
-  EMERGENCY:   { border: 'border-l-[#DC2626] bg-[#FEE2E2]/40', badge: 'bg-[#FEE2E2] text-[#991B1B] border border-[#DC2626]' },
-  ABNORMAL:    { border: 'border-l-[#D97706] bg-[#FEF3C7]/40', badge: 'bg-[#FEF3C7] text-[#92400E] border border-[#D97706]' },
-  NORMAL:      { border: 'border-l-[#16A34A] bg-[#DCFCE7]/20', badge: 'bg-[#DCFCE7] text-[#166534] border border-[#16A34A]' },
-  MAINTENANCE: { border: 'border-l-[#9CA3AF] bg-[#F3F4F6]/40',  badge: 'bg-[#F3F4F6] text-[#374151] border border-[#9CA3AF]' },
-}
+import { ALERT_CARD_STYLES as LEVEL_MAP } from '../../constants/status'
 
 export default function AlertCard({ title, level, message, timestamp, resolved, stage }) {
   const s = LEVEL_MAP[level] || LEVEL_MAP.NORMAL

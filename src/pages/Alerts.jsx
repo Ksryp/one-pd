@@ -1,14 +1,9 @@
 import { notifications } from '../data/mock'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { STATUS_COLORS as LEVEL_MAP } from '../constants/status'
 
 const STAGES = ['All', 'slip-prep', 'glaze-prep', 'casting', 'drying', 'spraying', 'firing']
-const LEVEL_MAP = {
-  EMERGENCY:   { bg: '#FEE2E2', text: '#991B1B', border: '#DC2626' },
-  ABNORMAL:    { bg: '#FEF3C7', text: '#92400E', border: '#D97706' },
-  NORMAL:      { bg: '#DCFCE7', text: '#166534', border: '#16A34A' },
-  MAINTENANCE: { bg: '#F3F4F6', text: '#374151', border: '#9CA3AF' },
-}
 
 export default function Alerts() {
   const navigate = useNavigate()
