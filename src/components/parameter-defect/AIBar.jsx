@@ -45,14 +45,14 @@ export default function AIBar() {
       </div>
 
       {/* Footer Settings & Disclaimer */}
-      <div className="border-t border-[var(--accent)]/20 pt-2 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="border-t border-[var(--accent)]/20 pt-2 flex flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <div className="flex items-center gap-1.5">
             <span className="text-[9px] font-bold text-[var(--accent)]/80 uppercase tracking-widest">Model:</span>
             <select 
               value={model} 
               onChange={(e) => setModel(e.target.value)}
-              className="bg-transparent border border-[var(--accent)]/30 rounded text-[10px] text-[var(--accent)] font-medium px-2 py-0.5 outline-none focus:border-[var(--accent)] cursor-pointer"
+              className="bg-transparent border border-[var(--accent)]/30 rounded text-[10px] text-[var(--accent)] font-medium px-2 py-0.5 outline-none focus:border-[var(--accent)] cursor-pointer max-w-[130px]"
             >
               {models.map(m => (
                 <option key={m} value={m} className="bg-[var(--bg-card)] text-[var(--text-primary)]">{m}</option>
@@ -87,7 +87,7 @@ export default function AIBar() {
           </div>
         </div>
 
-        <p className="text-[9px] text-[var(--accent)]/80 italic">
+        <p className="text-[9px] text-[var(--accent)]/80 italic leading-relaxed">
           *หมายเหตุ: ข้อมูลนี้เป็นเพียงการวิเคราะห์เบื้องต้นจาก AI แนะนำให้ตรวจสอบหน้างานจริง
         </p>
       </div>
