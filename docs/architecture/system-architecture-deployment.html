@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNK MES - System Architecture Deployment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0D1117 0%, #161B22 100%);
+            color: #E6EDF3;
+            padding: 30px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #4F8EE8, #1E6FCC);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #8B949E;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #6B7280;
+            font-size: 12px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #30363D;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            color: #8B949E;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 13px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-button:hover {
+            color: #E6EDF3;
+        }
+
+        .tab-button.active {
+            color: #4F8EE8;
+            border-bottom-color: #4F8EE8;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .diagram-container {
+            background: #0D1117;
+            border: 2px solid #30363D;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 40px;
+            overflow-x: auto;
+        }
+
+        svg {
+            display: block;
+            margin: 0 auto;
+            min-width: 100%;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 30px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #30363D;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            background: linear-gradient(135deg, #4F8EE8, #1E6FCC);
+            border-radius: 2px;
+        }
+
+        .architecture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .architecture-card {
+            background: #161B22;
+            border: 2px solid #30363D;
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .architecture-card:hover {
+            border-color: #4F8EE8;
+            box-shadow: 0 0 20px rgba(79, 142, 232, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .architecture-card.recommended {
+            border-color: #81C784;
+            background: rgba(129, 199, 132, 0.1);
+        }
+
+        .architecture-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #30363D;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(129, 199, 132, 0.2);
+            border: 1px solid #81C784;
+            color: #81C784;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .architecture-card-header h3 {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .architecture-item {
+            margin: 12px 0;
+            padding: 10px;
+            background: rgba(79, 142, 232, 0.05);
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .architecture-item strong {
+            color: #4F8EE8;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .pros, .cons {
+            font-size: 11px;
+        }
+
+        .pros strong, .cons strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .pros strong {
+            color: #81C784;
+        }
+
+        .cons strong {
+            color: #FF7043;
+        }
+
+        .pro-item, .con-item {
+            margin: 5px 0;
+            padding-left: 15px;
+            position: relative;
+            color: #8B949E;
+        }
+
+        .pro-item::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #81C784;
+            font-weight: 700;
+        }
+
+        .con-item::before {
+            content: '✗';
+            position: absolute;
+            left: 0;
+            color: #FF7043;
+            font-weight: 700;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: #0D1117;
+            border: 1px solid #30363D;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .comparison-table th {
+            background: rgba(79, 142, 232, 0.15);
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #30363D;
+            color: #4F8EE8;
+            font-size: 13px;
+        }
+
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #30363D;
+            font-size: 12px;
+            color: #8B949E;
+        }
+
+        .comparison-table tr:hover {
+            background: rgba(79, 142, 232, 0.05);
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .info-box {
+            background: rgba(79, 142, 232, 0.1);
+            border-left: 3px solid #4F8EE8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .warning-box {
+            background: rgba(255, 167, 38, 0.1);
+            border-left: 3px solid #FFA726;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .success-box {
+            background: rgba(129, 199, 132, 0.1);
+            border-left: 3px solid #81C784;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .highlight {
+            color: #4F8EE8;
+            font-weight: 600;
+        }
+
+        .highlight-orange {
+            color: #FFA726;
+            font-weight: 600;
+        }
+
+        .highlight-green {
+            color: #81C784;
+            font-weight: 600;
+        }
+
+        .deployment-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .step-card {
+            background: #161B22;
+            border: 1px solid #30363D;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .step-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #4F8EE8;
+            color: #0D1117;
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .step-card h4 {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #E6EDF3;
+        }
+
+        .step-card p {
+            font-size: 12px;
+            color: #8B949E;
+            line-height: 1.5;
+        }
+
+        .network-box {
+            background: rgba(79, 195, 247, 0.1);
+            border: 1px solid #4FC3F7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 12px;
+        }
+
+        .network-box strong {
+            color: #4FC3F7;
+        }
+
+        @media (max-width: 1024px) {
+            .diagram-container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .pros-cons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>SNK MES Dashboard</h1>
+            <p>System Architecture Deployment Strategy</p>
+            <div class="subtitle">On-Premise Database + External Access</div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab(event, 'recommended')">✅ Recommended Architecture</button>
+            <button class="tab-button" onclick="switchTab(event, 'deployment-options')">🏗️ Deployment Options</button>
+            <button class="tab-button" onclick="switchTab(event, 'comparison')">📊 Comparison Table</button>
+            <button class="tab-button" onclick="switchTab(event, 'implementation')">⚙️ Implementation Guide</button>
+        </div>
+
+        <!-- Tab 1: Recommended Architecture -->
+        <div id="recommended" class="tab-content active">
+            <div class="success-box">
+                <strong>🏆 RECOMMENDED: Hybrid Cloud Architecture</strong><br><br>
+                Database on-premise (factory) + Backend & Frontend on Cloud (AWS/Azure) with VPN/Secure tunnel
+            </div>
+
+            <div class="diagram-container">
+                <svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                        <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                            <path d="M0,0 L0,6 L9,3 z" fill="#4F8EE8" />
+                        </marker>
+                        <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                            <path d="M0,0 L0,6 L9,3 z" fill="#81C784" />
+                        </marker>
+                    </defs>
+
+                    <!-- INTERNET -->
+                    <rect x="50" y="30" width="1300" height="60" fill="rgba(255, 167, 38, 0.15)" stroke="#FFA726" stroke-width="2" rx="8"/>
+                    <text x="700" y="65" text-anchor="middle" font-size="14" font-weight="700" fill="#FFA726">🌐 INTERNET (Public Access)</text>
+
+                    <!-- External Users -->
+                    <text x="200" y="150" text-anchor="middle" font-size="13" font-weight="600" fill="#E6EDF3">External Users</text>
+                    <rect x="140" y="160" width="120" height="50" fill="rgba(79, 142, 232, 0.2)" stroke="#4F8EE8" stroke-width="2" rx="5"/>
+                    <text x="200" y="180" text-anchor="middle" font-size="11" fill="#8B949E">Sales Manager</text>
+                    <text x="200" y="195" text-anchor="middle" font-size="11" fill="#8B949E">(Bangkok)</text>
+
+                    <text x="400" y="150" text-anchor="middle" font-size="13" font-weight="600" fill="#E6EDF3">Mobile App</text>
+                    <rect x="340" y="160" width="120" height="50" fill="rgba(79, 142, 232, 0.2)" stroke="#4F8EE8" stroke-width="2" rx="5"/>
+                    <text x="400" y="180" text-anchor="middle" font-size="11" fill="#8B949E">iOS / Android</text>
+                    <text x="400" y="195" text-anchor="middle" font-size="11" fill="#8B949E">App</text>
+
+                    <text x="600" y="150" text-anchor="middle" font-size="13" font-weight="600" fill="#E6EDF3">Web Browser</text>
+                    <rect x="540" y="160" width="120" height="50" fill="rgba(79, 142, 232, 0.2)" stroke="#4F8EE8" stroke-width="2" rx="5"/>
+                    <text x="600" y="180" text-anchor="middle" font-size="11" fill="#8B949E">Web App</text>
+                    <text x="600" y="195" text-anchor="middle" font-size="11" fill="#8B949E">(dashboard.mes.com)</text>
+
+                    <!-- Cloud Section -->
+                    <rect x="50" y="250" width="600" height="550" fill="rgba(79, 142, 232, 0.08)" stroke="#4F8EE8" stroke-width="2" stroke-dasharray="5,5" rx="8"/>
+                    <text x="70" y="275" font-size="14" font-weight="700" fill="#4F8EE8">☁️ CLOUD (AWS / Azure)</text>
+
+                    <!-- CDN -->
+                    <rect x="80" y="300" width="180" height="80" fill="rgba(79, 142, 232, 0.2)" stroke="#4F8EE8" stroke-width="2" rx="5"/>
+                    <text x="170" y="325" text-anchor="middle" font-size="12" font-weight="600" fill="#4F8EE8">CDN</text>
+                    <text x="170" y="345" text-anchor="middle" font-size="11" fill="#8B949E">CloudFlare / AWS</text>
+                    <text x="170" y="360" text-anchor="middle" font-size="11" fill="#8B949E">CloudFront</text>
+
+                    <!-- Frontend -->
+                    <rect x="300" y="300" width="320" height="120" fill="rgba(129, 199, 132, 0.2)" stroke="#81C784" stroke-width="2" rx="5"/>
+                    <text x="460" y="325" text-anchor="middle" font-size="12" font-weight="600" fill="#81C784">Frontend (React SPA)</text>
+                    <text x="460" y="345" text-anchor="middle" font-size="10" fill="#8B949E">• Static HTML/CSS/JS</text>
+                    <text x="460" y="360" text-anchor="middle" font-size="10" fill="#8B949E">• S3 Bucket + CloudFront</text>
+                    <text x="460" y="375" text-anchor="middle" font-size="10" fill="#8B949E">• Auto-scaling</text>
+
+                    <!-- Backend API -->
+                    <rect x="300" y="450" width="320" height="120" fill="rgba(88, 166, 255, 0.2)" stroke="#58A6FF" stroke-width="2" rx="5"/>
+                    <text x="460" y="475" text-anchor="middle" font-size="12" font-weight="600" fill="#58A6FF">Backend API Server</text>
+                    <text x="460" y="495" text-anchor="middle" font-size="10" fill="#8B949E">• Node.js / Python</text>
+                    <text x="460" y="510" text-anchor="middle" font-size="10" fill="#8B949E">• EC2 / App Service</text>
+                    <text x="460" y="525" text-anchor="middle" font-size="10" fill="#8B949E">• Auto-scaling group</text>
+
+                    <!-- Factory/On-Premise Section -->
+                    <rect x="750" y="250" width="550" height="550" fill="rgba(255, 167, 38, 0.08)" stroke="#FFA726" stroke-width="2" stroke-dasharray="5,5" rx="8"/>
+                    <text x="770" y="275" font-size="14" font-weight="700" fill="#FFA726">🏭 FACTORY (On-Premise)</text>
+
+                    <!-- Firewall -->
+                    <rect x="780" y="300" width="160" height="80" fill="rgba(255, 64, 129, 0.2)" stroke="#FF4081" stroke-width="2" rx="5"/>
+                    <text x="860" y="325" text-anchor="middle" font-size="12" font-weight="600" fill="#FF4081">🔒 Firewall</text>
+                    <text x="860" y="345" text-anchor="middle" font-size="10" fill="#8B949E">Port: 443 Only</text>
+                    <text x="860" y="360" text-anchor="middle" font-size="10" fill="#8B949E">VPN Tunnel</text>
+
+                    <!-- VPN Gateway -->
+                    <rect x="980" y="300" width="280" height="80" fill="rgba(171, 71, 188, 0.2)" stroke="#AB47BC" stroke-width="2" rx="5"/>
+                    <text x="1120" y="325" text-anchor="middle" font-size="12" font-weight="600" fill="#AB47BC">VPN Gateway</text>
+                    <text x="1120" y="345" text-anchor="middle" font-size="10" fill="#8B949E">• Encrypted Tunnel</text>
+                    <text x="1120" y="360" text-anchor="middle" font-size="10" fill="#8B949E">• IPSec / OpenVPN</text>
+
+                    <!-- Internal Network -->
+                    <rect x="780" y="410" width="480" height="100" fill="rgba(79, 195, 247, 0.15)" stroke="#4FC3F7" stroke-width="2" rx="5"/>
+                    <text x="1020" y="430" text-anchor="middle" font-size="12" font-weight="600" fill="#4FC3F7">Internal Factory Network</text>
+                    <text x="1020" y="450" text-anchor="middle" font-size="10" fill="#8B949E">Private IP Range: 192.168.x.x</text>
+                    <text x="1020" y="468" text-anchor="middle" font-size="10" fill="#8B949E">• MES Server (if exists)</text>
+                    <text x="1020" y="483" text-anchor="middle" font-size="10" fill="#8B949E">• PLC Controllers</text>
+
+                    <!-- Database Server -->
+                    <rect x="780" y="540" width="480" height="140" fill="rgba(255, 152, 0, 0.2)" stroke="#FFB74D" stroke-width="2" rx="5"/>
+                    <text x="1020" y="565" text-anchor="middle" font-size="12" font-weight="600" fill="#FFB74D">🗄️ Database Server</text>
+                    <text x="1020" y="585" text-anchor="middle" font-size="10" fill="#8B949E">• PostgreSQL (Primary DB)</text>
+                    <text x="1020" y="600" text-anchor="middle" font-size="10" fill="#8B949E">• InfluxDB (Time Series)</text>
+                    <text x="1020" y="615" text-anchor="middle" font-size="10" fill="#8B949E">• Redis Cache</text>
+                    <text x="1020" y="630" text-anchor="middle" font-size="10" fill="#8B949E">• Local Backup</text>
+                    <text x="1020" y="645" text-anchor="middle" font-size="10" fill="#8B949E">• IP: 192.168.1.10</text>
+                    <text x="1020" y="660" text-anchor="middle" font-size="10" fill="#8B949E">(Not public internet)</text>
+
+                    <!-- Connections from external to cloud -->
+                    <line x1="200" y1="210" x2="200" y2="250" stroke="#4F8EE8" stroke-width="2" marker-end="url(#arrowBlue)" filter="url(#glow)"/>
+                    <line x1="400" y1="210" x2="400" y2="250" stroke="#4F8EE8" stroke-width="2" marker-end="url(#arrowBlue)" filter="url(#glow)"/>
+                    <line x1="600" y1="210" x2="600" y2="250" stroke="#4F8EE8" stroke-width="2" marker-end="url(#arrowBlue)" filter="url(#glow)"/>
+
+                    <!-- Cloud to Factory connection -->
+                    <line x1="620" y1="490" x2="750" y2="420" stroke="#AB47BC" stroke-width="3" marker-end="url(#arrowGreen)" filter="url(#glow)"/>
+                    <text x="680" y="450" font-size="11" fill="#AB47BC" font-weight="600">VPN Tunnel</text>
+                    <text x="680" y="468" font-size="10" fill="#AB47BC">(Encrypted)</text>
+
+                    <!-- Cloud to CDN -->
+                    <line x1="260" y1="340" x2="300" y2="340" stroke="#4F8EE8" stroke-width="2" marker-end="url(#arrowBlue)" filter="url(#glow)"/>
+                    <text x="270" y="330" font-size="10" fill="#4F8EE8">Sync</text>
+
+                    <!-- External to CDN -->
+                    <line x1="200" y1="160" x2="150" y2="310" stroke="#4F8EE8" stroke-width="2" marker-end="url(#arrowBlue)" filter="url(#glow)"/>
+                    <line x1="400" y1="160" x2="400" y2="300" stroke="#4F8EE8" stroke-width="2" marker-end="url(#arrowBlue)" filter="url(#glow)"/>
+                    <line x1="600" y1="160" x2="460" y2="300" stroke="#4F8EE8" stroke-width="2" marker-end="url(#arrowBlue)" filter="url(#glow)"/>
+                </svg>
+            </div>
+
+            <div class="section-title">📋 Component Deployment Guide</div>
+
+            <div class="architecture-grid">
+                <div class="architecture-card">
+                    <div class="architecture-card-header">
+                        <h3>☁️ Cloud: Frontend</h3>
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Location:</strong> AWS S3 + CloudFront (or Azure Blob + CDN)
+                    </div>
+                    <div class="architecture-item">
+                        <strong>What to deploy:</strong> Built React app (HTML/CSS/JS)
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Why:</strong> Closer to users, better latency, auto-scaling
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Cost:</strong> ~$1-5/month for small traffic
+                    </div>
+                </div>
+
+                <div class="architecture-card">
+                    <div class="architecture-card-header">
+                        <h3>☁️ Cloud: Backend API</h3>
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Location:</strong> AWS EC2 / ECS (or Azure App Service)
+                    </div>
+                    <div class="architecture-item">
+                        <strong>What to deploy:</strong> Node.js/Python API Server
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Why:</strong> Can scale dynamically, easy to maintain
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Cost:</strong> ~$20-50/month (t3.small instances)
+                    </div>
+                </div>
+
+                <div class="architecture-card">
+                    <div class="architecture-card-header">
+                        <h3>🏭 Factory: Database</h3>
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Location:</strong> Physical server in factory
+                    </div>
+                    <div class="architecture-item">
+                        <strong>What to deploy:</strong> PostgreSQL, InfluxDB, Redis
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Why:</strong> Keep data on-premise, compliant, full control
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Cost:</strong> One-time hardware + maintenance
+                    </div>
+                </div>
+
+                <div class="architecture-card">
+                    <div class="architecture-card-header">
+                        <h3>🔒 Factory: VPN Gateway</h3>
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Location:</strong> Physical/Virtual appliance in factory
+                    </div>
+                    <div class="architecture-item">
+                        <strong>What to deploy:</strong> OpenVPN server or IPSec gateway
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Why:</strong> Encrypted tunnel between Cloud & Factory
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Cost:</strong> ~$5-10/month for OpenVPN Cloud
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>🔐 Security Flow:</strong><br><br>
+                <span class="highlight">User (Internet)</span> →
+                <span class="highlight">HTTPS to CDN/API in Cloud</span> →
+                <span class="highlight">Cloud Backend (EC2)</span> →
+                <span class="highlight">VPN Encrypted Tunnel</span> →
+                <span class="highlight">Factory VPN Gateway</span> →
+                <span class="highlight">Internal Private Network</span> →
+                <span class="highlight">Database (192.168.1.10)</span>
+            </div>
+
+            <div class="warning-box">
+                <strong>⚠️ Important Security Measures:</strong><br><br>
+                • Database has <span class="highlight-orange">NO direct internet access</span> (only via VPN)<br>
+                • Firewall on factory network allows only <span class="highlight-orange">port 443 (HTTPS)</span><br>
+                • Database uses <span class="highlight-orange">private IP (192.168.x.x)</span><br>
+                • VPN tunnel is <span class="highlight-orange">encrypted (IPSec/OpenVPN)</span><br>
+                • Backend API validates <span class="highlight-orange">JWT tokens</span> before DB access<br>
+                • Database has <span class="highlight-orange">read-only API access</span> configured<br>
+                • Regular backups to cloud or external disk
+            </div>
+        </div>
+
+        <!-- Tab 2: Deployment Options -->
+        <div id="deployment-options" class="tab-content">
+            <div class="section-title">Architecture Comparison: 4 Options</div>
+
+            <div class="architecture-grid">
+                <!-- Option 1 -->
+                <div class="architecture-card">
+                    <div class="architecture-card-header">
+                        <h3>Option 1: All On-Premise</h3>
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Setup:</strong> All layers on factory servers
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Frontend:</strong> Apache/Nginx web server
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Backend:</strong> Node.js on local machine
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Database:</strong> PostgreSQL local
+                    </div>
+                    <div class="architecture-item">
+                        <strong>External Access:</strong> Public IP + Dynamic DNS
+                    </div>
+
+                    <div class="pros-cons">
+                        <div class="pros">
+                            <strong>✓ Pros</strong>
+                            <div class="pro-item">Zero cloud costs</div>
+                            <div class="pro-item">Full control</div>
+                            <div class="pro-item">Low latency</div>
+                            <div class="pro-item">Data stays in factory</div>
+                        </div>
+                        <div class="cons">
+                            <strong>✗ Cons</strong>
+                            <div class="con-item">Must maintain servers</div>
+                            <div class="con-item">Network bottleneck</div>
+                            <div class="con-item">Poor scalability</div>
+                            <div class="con-item">Security risk</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Option 2 -->
+                <div class="architecture-card recommended">
+                    <div class="architecture-card-header">
+                        <span class="badge">⭐ RECOMMENDED</span>
+                        <h3>Option 2: Hybrid Cloud</h3>
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Setup:</strong> Frontend & Backend on Cloud, DB on-premise
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Frontend:</strong> S3 + CloudFront
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Backend:</strong> EC2 / App Service
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Database:</strong> PostgreSQL in factory
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Connection:</strong> VPN Tunnel (IPSec/OpenVPN)
+                    </div>
+
+                    <div class="pros-cons">
+                        <div class="pros">
+                            <strong>✓ Pros</strong>
+                            <div class="pro-item">Best scalability</div>
+                            <div class="pro-item">Easy external access</div>
+                            <div class="pro-item">Data stays on-premise</div>
+                            <div class="pro-item">Secure (encrypted tunnel)</div>
+                        </div>
+                        <div class="cons">
+                            <strong>✗ Cons</strong>
+                            <div class="con-item">Cloud costs (~$30/month)</div>
+                            <div class="con-item">Network latency (100-200ms)</div>
+                            <div class="con-item">VPN maintenance</div>
+                            <div class="con-item">Moderate complexity</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Option 3 -->
+                <div class="architecture-card">
+                    <div class="architecture-card-header">
+                        <h3>Option 3: Cloud + Backup DB</h3>
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Setup:</strong> Replicate DB to cloud, read-only access
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Frontend:</strong> Cloud (S3 + CDN)
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Backend:</strong> Cloud with cloud DB
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Database:</strong> Master on-premise, Replica in cloud
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Sync:</strong> Continuous replication
+                    </div>
+
+                    <div class="pros-cons">
+                        <div class="pros">
+                            <strong>✓ Pros</strong>
+                            <div class="pro-item">Fast cloud queries</div>
+                            <div class="pro-item">Good scalability</div>
+                            <div class="pro-item">Better disaster recovery</div>
+                            <div class="pro-item">Data local backup</div>
+                        </div>
+                        <div class="cons">
+                            <strong>✗ Cons</strong>
+                            <div class="con-item">Higher cloud costs</div>
+                            <div class="con-item">Data sync complexity</div>
+                            <div class="con-item">Eventual consistency</div>
+                            <div class="con-item">Replication lag</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Option 4 -->
+                <div class="architecture-card">
+                    <div class="architecture-card-header">
+                        <h3>Option 4: Hybrid with Edge</h3>
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Setup:</strong> Cloud frontend, local backend, on-premise DB
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Frontend:</strong> S3 + CloudFront
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Backend:</strong> Node.js in factory (VPN + API Gateway)
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Database:</strong> PostgreSQL in factory
+                    </div>
+                    <div class="architecture-item">
+                        <strong>Access:</strong> AWS API Gateway with IAM auth
+                    </div>
+
+                    <div class="pros-cons">
+                        <div class="pros">
+                            <strong>✓ Pros</strong>
+                            <div class="pro-item">Very low latency</div>
+                            <div class="pro-item">Full control (backend)</div>
+                            <div class="pro-item">Data stays local</div>
+                            <div class="pro-item">Best performance</div>
+                        </div>
+                        <div class="cons">
+                            <strong>✗ Cons</strong>
+                            <div class="con-item">Backend maintenance needed</div>
+                            <div class="con-item">No cloud scaling</div>
+                            <div class="con-item">Network dependency</div>
+                            <div class="con-item">Complex setup</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Comparison Table -->
+        <div id="comparison" class="tab-content">
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Criteria</th>
+                        <th>All On-Premise</th>
+                        <th>✅ Hybrid Cloud</th>
+                        <th>Cloud + Backup</th>
+                        <th>Edge + Cloud</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Frontend Location</strong></td>
+                        <td>On-premise (Nginx)</td>
+                        <td>Cloud (S3 + CDN)</td>
+                        <td>Cloud (S3 + CDN)</td>
+                        <td>Cloud (S3 + CDN)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Backend Location</strong></td>
+                        <td>On-premise</td>
+                        <td>Cloud (EC2/AppService)</td>
+                        <td>Cloud (RDS)</td>
+                        <td>On-premise + API Gateway</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Database Location</strong></td>
+                        <td>On-premise</td>
+                        <td>On-premise</td>
+                        <td>On-premise + Cloud Replica</td>
+                        <td>On-premise</td>
+                    </tr>
+                    <tr>
+                        <td><strong>External Access</strong></td>
+                        <td>Public IP + DynDNS</td>
+                        <td>Internet → Cloud → VPN</td>
+                        <td>Internet → Cloud → Sync</td>
+                        <td>Internet → API Gateway → VPN</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Scalability</strong></td>
+                        <td>⭐ Poor</td>
+                        <td>⭐⭐⭐⭐⭐ Excellent</td>
+                        <td>⭐⭐⭐⭐ Very Good</td>
+                        <td>⭐⭐⭐ Good</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Performance (Latency)</strong></td>
+                        <td>⭐⭐⭐⭐⭐ < 10ms</td>
+                        <td>⭐⭐⭐ 100-200ms</td>
+                        <td>⭐⭐⭐⭐ 20-50ms</td>
+                        <td>⭐⭐⭐⭐⭐ < 10ms</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Security</strong></td>
+                        <td>⭐ Low (public)</td>
+                        <td>⭐⭐⭐⭐⭐ Excellent</td>
+                        <td>⭐⭐⭐⭐ Very Good</td>
+                        <td>⭐⭐⭐⭐ Very Good</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Monthly Cost</strong></td>
+                        <td>$0 (hardware only)</td>
+                        <td>$30-50</td>
+                        <td>$60-100</td>
+                        <td>$20-30</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Maintenance Effort</strong></td>
+                        <td>⭐⭐⭐⭐⭐ High</td>
+                        <td>⭐⭐ Low</td>
+                        <td>⭐⭐⭐ Moderate</td>
+                        <td>⭐⭐⭐⭐ High</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Disaster Recovery</strong></td>
+                        <td>⭐ Poor</td>
+                        <td>⭐⭐⭐⭐ Good</td>
+                        <td>⭐⭐⭐⭐⭐ Excellent</td>
+                        <td>⭐⭐⭐ Moderate</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="success-box" style="margin-top: 30px;">
+                <strong>✅ Why Hybrid Cloud is Recommended:</strong><br><br>
+                • Best balance between <span class="highlight-green">cost ($30-50/month)</span>, <span class="highlight-green">security</span>, and <span class="highlight-green">scalability</span><br>
+                • Database stays <span class="highlight-green">on-premise</span> (data control + compliance)<br>
+                • External users get <span class="highlight-green">fast, reliable access</span> via cloud<br>
+                • <span class="highlight-green">Encrypted VPN tunnel</span> between cloud and factory<br>
+                • Easy to <span class="highlight-green">scale backend</span> as users grow<br>
+                • <span class="highlight-green">Minimal maintenance</span> compared to on-premise only
+            </div>
+        </div>
+
+        <!-- Tab 4: Implementation Guide -->
+        <div id="implementation" class="tab-content">
+            <div class="section-title">🛠️ Implementation Steps (Hybrid Cloud)</div>
+
+            <div class="deployment-steps">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h4>Prepare Factory Infrastructure</h4>
+                    <p><strong>Timeline:</strong> Week 1-2<br>
+                    • Get physical server for DB (or repurpose existing)<br>
+                    • Install PostgreSQL + InfluxDB<br>
+                    • Configure internal network (192.168.1.x)<br>
+                    • Setup local backup system</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h4>Setup VPN Gateway (Factory)</h4>
+                    <p><strong>Timeline:</strong> Week 2-3<br>
+                    • Buy OpenVPN cloud license (~$5/month)<br>
+                    • Or: Cisco/Fortinet VPN box<br>
+                    • Configure IPSec/OpenVPN tunnel<br>
+                    • Setup firewall rules (port 443 only)</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h4>Setup AWS/Azure Cloud Account</h4>
+                    <p><strong>Timeline:</strong> Day 1<br>
+                    • Create AWS/Azure account<br>
+                    • Setup VPC with security groups<br>
+                    • Create S3 bucket for frontend<br>
+                    • Launch EC2/AppService instance</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h4>Connect VPN (Cloud ↔ Factory)</h4>
+                    <p><strong>Timeline:</strong> Week 3<br>
+                    • Install VPN client on cloud backend<br>
+                    • Configure VPN server in factory<br>
+                    • Test encrypted tunnel<br>
+                    • Verify database connectivity</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">5</div>
+                    <h4>Deploy Backend API (Cloud)</h4>
+                    <p><strong>Timeline:</strong> Week 4<br>
+                    • Upload Node.js/Python app to EC2<br>
+                    • Configure environment variables<br>
+                    • Setup SSL certificates<br>
+                    • Test API endpoints</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">6</div>
+                    <h4>Deploy Frontend (Cloud CDN)</h4>
+                    <p><strong>Timeline:</strong> Week 4<br>
+                    • Build React app: npm run build<br>
+                    • Upload to S3 bucket<br>
+                    • Configure CloudFront distribution<br>
+                    • Point domain to CDN</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">7</div>
+                    <h4>Security Hardening</h4>
+                    <p><strong>Timeline:</strong> Week 5<br>
+                    • Configure IAM roles<br>
+                    • Setup JWT authentication<br>
+                    • Enable HTTPS everywhere<br>
+                    • Test security penetration</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">8</div>
+                    <h4>Testing & Go Live</h4>
+                    <p><strong>Timeline:</strong> Week 5-6<br>
+                    • Test from external network<br>
+                    • Load testing<br>
+                    • User acceptance testing<br>
+                    • Launch to production</p>
+                </div>
+            </div>
+
+            <div class="section-title">📊 Network Diagram Details</div>
+
+            <div class="network-box">
+                <strong>FACTORY NETWORK:</strong><br>
+                • Firewall: Only port 443 (HTTPS)<br>
+                • Gateway: 192.168.1.1 (OpenVPN server)<br>
+                • DB Server: 192.168.1.10 (PostgreSQL/InfluxDB)<br>
+                • Internal LAN: 192.168.1.0/24 (PRIVATE)<br>
+                • No direct internet access to DB
+            </div>
+
+            <div class="network-box">
+                <strong>CLOUD BACKEND (AWS EC2):</strong><br>
+                • Public IP: Assigned by AWS<br>
+                • Security Group: Allow 443 incoming<br>
+                • VPN Client: Connected to factory VPN<br>
+                • Can reach DB via: 192.168.1.10 (via tunnel)<br>
+                • API Endpoint: https://api.mes.com/v1/...
+            </div>
+
+            <div class="network-box">
+                <strong>CDN (CloudFront):</strong><br>
+                • Caches: React app (HTML/CSS/JS)<br>
+                • Global distribution (faster for users)<br>
+                • Points to S3 bucket as origin<br>
+                • Domain: https://dashboard.mes.com
+            </div>
+
+            <div class="info-box" style="margin-top: 30px;">
+                <strong>💡 Data Flow (User Request):</strong><br><br>
+                1. User opens <span class="highlight">dashboard.mes.com</span><br>
+                2. Browser requests from <span class="highlight">CloudFront CDN</span><br>
+                3. CDN returns <span class="highlight">React app (HTML/CSS/JS)</span><br>
+                4. React app loads and calls <span class="highlight">api.mes.com/v1/dashboard</span><br>
+                5. Cloud Backend receives request<br>
+                6. Backend connects via <span class="highlight">VPN tunnel to Factory</span><br>
+                7. Backend queries <span class="highlight">PostgreSQL (192.168.1.10)</span><br>
+                8. Database returns data<br>
+                9. Backend sends <span class="highlight">JSON response</span><br>
+                10. React app displays data in Dashboard<br>
+                <br>
+                <strong>⏱️ Total time: 200-500ms (depending on latency)</strong>
+            </div>
+
+            <div class="warning-box" style="margin-top: 20px;">
+                <strong>⚠️ Important Considerations:</strong><br><br>
+                • <span class="highlight-orange">Firewall in factory:</span> Must whitelist VPN gateway IP<br>
+                • <span class="highlight-orange">Database password:</span> Store in cloud secret manager (AWS Secrets)<br>
+                • <span class="highlight-orange">Network bandwidth:</span> Ensure factory internet can handle traffic<br>
+                • <span class="highlight-orange">Backup strategy:</span> Regular backups to cloud (S3 or Glacier)<br>
+                • <span class="highlight-orange">Monitoring:</strong> Setup CloudWatch + local monitoring<br>
+                • <span class="highlight-orange">Redundancy:</span> Consider multi-AZ for cloud resources
+            </warning-box>
+
+            <div class="section-title">💰 Cost Estimation (Monthly)</div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Provider</th>
+                        <th>Cost</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>EC2 Instance</td>
+                        <td>AWS</td>
+                        <td>$15-25</td>
+                        <td>t3.small (burstable CPU)</td>
+                    </tr>
+                    <tr>
+                        <td>S3 + CloudFront</td>
+                        <td>AWS</td>
+                        <td>$3-8</td>
+                        <td>Depends on traffic</td>
+                    </tr>
+                    <tr>
+                        <td>VPN Gateway</td>
+                        <td>OpenVPN Cloud</td>
+                        <td>$5</td>
+                        <td>Or cheaper alternative: Wireguard</td>
+                    </tr>
+                    <tr>
+                        <td>Domain + SSL</td>
+                        <td>Route53</td>
+                        <td>$1-2</td>
+                        <td>Free SSL via CloudFront</td>
+                    </tr>
+                    <tr>
+                        <td>Data Transfer</td>
+                        <td>AWS</td>
+                        <td>$1-5</td>
+                        <td>Outbound only</td>
+                    </tr>
+                    <tr style="font-weight: 700; background: rgba(129, 199, 132, 0.1);">
+                        <td colspan="2">TOTAL MONTHLY</td>
+                        <td>$25-45</td>
+                        <td>Plus factory server hardware</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(event, tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Scroll animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'slideIn 0.6s ease forwards';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.architecture-card').forEach(card => {
+            observer.observe(card);
+        });
+
+        document.querySelectorAll('.step-card').forEach(card => {
+            observer.observe(card);
+        });
+
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .architecture-card, .step-card {
+                animation: slideIn 0.6s ease forwards;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

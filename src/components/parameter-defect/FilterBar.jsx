@@ -5,10 +5,13 @@ import { api } from '../../services/api'
 const USE_API = import.meta.env.VITE_USE_API === 'true'
 
 const PARAMETERS = [
-  { key: 'viscosity_v0',  label: 'Viscosity V0'  },
-  { key: 'viscosity_v30', label: 'Viscosity V30' },
-  { key: 'temperature',   label: 'Temperature'   },
-  { key: 'moisture',      label: 'Moisture %'    },
+  { key: 'viscosity_v0',  label: 'Viscosity V0'    },
+  { key: 'viscosity_v30', label: 'Viscosity V30'   },
+  { key: 'temperature',   label: 'Temperature'     },
+  { key: 'concentration', label: 'Concentration'   },
+  { key: 'casting_rate',  label: 'Casting Rate'    },
+  { key: 'yield_value',   label: 'Yield'           },
+  { key: 'thixo',         label: 'Thixotropy'      },
 ]
 
 const VIEWS = [
@@ -121,7 +124,6 @@ export default function FilterBar() {
               ${selectedDefect === d.code.toLowerCase() ? 'text-[var(--accent)] font-bold bg-[var(--accent-light)]' : 'text-[var(--text-primary)]'}`}>
             <span className="font-semibold">{d.code}</span>
             <span className="text-[10px] text-[var(--text-secondary)] ml-1.5">{d.label}</span>
-            <span className="float-right text-[10px] tabular-nums text-[var(--text-secondary)]">{d.count.toLocaleString()}</span>
           </button>
         ))}
       </DropdownFilter>
@@ -140,7 +142,6 @@ export default function FilterBar() {
               checked={Array.isArray(selectedModel) && selectedModel.includes(m.name)}
               onChange={() => toggleModel(m.name)} />
             <span className="text-[11px] text-[var(--text-primary)] truncate max-w-[180px]" title={m.name}>{m.name}</span>
-            <span className="ml-auto text-[10px] tabular-nums text-[var(--text-secondary)] flex-shrink-0">{m.count.toLocaleString()}</span>
           </label>
         ))}
       </DropdownFilter>

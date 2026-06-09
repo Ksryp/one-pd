@@ -1,0 +1,52 @@
+================================================================================
+PROMPT เสริม (Claude Code) — Deploy ผ่าน Cloudflare Tunnel + Real-time + GitHub
+ใช้ต่อจาก PROMPT-backend-claude-code.txt  ·  Repo: one-pd
+================================================================================
+
+บริบท: ยังไม่มี domain. ต้องการเอาระบบขึ้นออนไลน์ผ่าน Cloudflare Tunnel,
+ยังต้องดึงข้อมูลแบบ Real-time ได้, และใช้ git push + เชื่อม Cloudflare เข้ากับ GitHub.
+
+งานที่ต้องทำ (สั้น กระชับ):
+
+1) FRONTEND → Cloudflare Pages (auto-deploy จาก GitHub)
+   - ตั้งค่า build: framework Vite, build cmd `npm run build`, output `dist`.
+   - ใช้ URL ฟรีที่ Pages แจกให้ (`*.pages.dev`) — ไม่ต้องมี domain.
+   - มี `public/_redirects` รองรับ SPA (`/* /index.html 200`) แล้ว ตรวจให้ใช้งานได้.
+   - frontend อ่าน API base จาก `VITE_API_BASE_URL` (ตั้งใน Pages env var).
+
+2) BACKEND → Cloudflare Tunnel (ไม่มี domain)
+   - รัน FastAPI (ตาม prompt หลัก) บนเครื่อง/VPS แล้ว expose ผ่าน `cloudflared`.
+   - ไม่มี domain → ใช้ Quick Tunnel: `cloudflared tunnel --url http://localhost:8000`
+     จะได้ URL ชั่วคราว `https://<random>.trycloudflare.com` เอาไปใส่
+     `VITE_API_BASE_URL` ของ Pages. (อธิบายข้อจำกัด: URL เปลี่ยนทุกครั้งที่ restart)
+   - ทำเป็น systemd `cloudflared.service` ให้ tunnel รันถาวร + restart อัตโนมัติ.
+   - เปิด CORS ให้ origin `*.pages.dev`.
+   - หมายเหตุ: ถ้าภายหลังมี domain → ย้ายเป็น Named Tunnel (`config.yml` + DNS route)
+     เพื่อให้ URL คงที่ ใส่ stub ไว้ใน `deploy/cloudflared/config.yml.example`.
+
+3) REAL-TIME
+   - เพิ่ม WebSocket endpoint ใน FastAPI (เช่น `/ws/live`) push อัปเดต defect/alert/
+     parameter ล่าสุด; frontend hook subscribe แล้วอัปเดต Context.
+   - Cloudflare Tunnel รองรับ WebSocket อยู่แล้ว — ตรวจให้ผ่าน proxy.
+   - ถ้า WebSocket overkill ให้ fallback เป็น SSE หรือ polling ทุก N วินาที (flag เลือกได้).
+   - source real-time: ตอนนี้ยังไม่มี live feed → จำลองด้วย poller ที่อ่าน DB/ไฟล์ใหม่
+     แล้ว broadcast (เผื่อไว้ต่อ EMQX/Node-RED ภายหลัง).
+
+4) GIT + เชื่อม GitHub
+   - ตรวจ `.gitignore` (node_modules, dist, .env, *.env, ไฟล์ JSON ใหญ่ถ้าไม่ควร commit).
+   - ⚠️ `qrcode_snk.json` ~60MB เกินลิมิตที่ GitHub เตือน (>50MB) — อย่า commit ตรง ๆ:
+     ใช้ Git LFS หรือเก็บนอก repo แล้ว seed จาก path/URL (แจ้งทางเลือกให้เลือก).
+   - commit + push ขึ้น GitHub, เขียน `deploy/README.md`: ขั้นตอนเชื่อม Cloudflare Pages
+     กับ repo (Pages → Connect to Git → เลือก repo → ตั้ง build/env) ให้ทำตามได้จริง.
+   - ใส่ `.env.example` ทั้ง frontend (VITE_*) และ backend.
+
+เกณฑ์ผ่าน:
+[ ] push ขึ้น GitHub แล้ว Pages auto-build เปิด `*.pages.dev` ได้
+[ ] backend ออนไลน์ผ่าน trycloudflare URL, frontend เรียก API ติด, CORS ผ่าน
+[ ] WebSocket/SSE ส่งค่า real-time ทะลุ tunnel ได้จริง
+[ ] cloudflared + api รันเป็น systemd, restart อัตโนมัติ
+[ ] ไม่มี secret/ไฟล์ใหญ่หลุดขึ้น git
+
+เริ่มจาก: ตรวจ .gitignore + จัดการไฟล์ใหญ่ → ตั้ง Pages config → cloudflared quick tunnel
+→ เพิ่ม WebSocket → ต่อ frontend. หยุดให้รีวิวก่อนถ้าต้องตัดสินใจเรื่อง LFS หรือ host backend.
+================================================================================

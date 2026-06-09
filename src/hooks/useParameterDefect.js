@@ -18,13 +18,14 @@ export function useParameterDefect() {
     selectedView, selectedDate, refreshInterval,
   } = useDashboard()
 
-  const [chartData,  setChartData]  = useState([])
-  const [insights,   setInsights]   = useState(null)
-  const [ucl,        setUcl]        = useState({})
-  const [lcl,        setLcl]        = useState({})
+  const [chartData,   setChartData]   = useState([])
+  const [insights,    setInsights]    = useState(null)
+  const [ucl,         setUcl]         = useState({})
+  const [lcl,         setLcl]         = useState({})
   const [lastUpdated, setLastUpdated] = useState(null)
-  const [loading,    setLoading]    = useState(true)
-  const timerRef = useRef(null)
+  const [loading,     setLoading]     = useState(true)
+  const timerRef  = useRef(null)
+  const fetchRef  = useRef(null)
 
   useEffect(() => {
     const parts = (selectedDate || '').split(' to ')
@@ -63,6 +64,8 @@ export function useParameterDefect() {
       finally { setLoading(false) }
     }
 
+    fetchRef.current = fetch_
+
     if (timerRef.current) clearInterval(timerRef.current)
     fetch_()
 
@@ -72,5 +75,7 @@ export function useParameterDefect() {
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [selectedParameter, selectedDefect, selectedModel, selectedView, selectedDate, refreshInterval])
 
-  return { chartData, insights, ucl, lcl, lastUpdated, loading }
+  const refresh = () => { if (fetchRef.current) fetchRef.current() }
+
+  return { chartData, insights, ucl, lcl, lastUpdated, loading, refresh }
 }

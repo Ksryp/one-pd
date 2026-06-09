@@ -1,3 +1,9 @@
+# Secrets
+gittoken.txt
+
+# DB seed data — large files, not needed for build
+data/
+
 # Dependencies
 node_modules/
 

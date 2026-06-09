@@ -7,7 +7,7 @@ from datetime import date
 import psycopg2
 from psycopg2.extras import execute_values
 
-DATA_DIR = Path(__file__).parent.parent.parent
+DATA_DIR = Path(__file__).parent.parent.parent / "data"
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from app.core.config import settings
 
@@ -61,7 +61,18 @@ def seed_slip_records(cur):
              v0_sec100ml, v30_sec100ml, yield_value, f0, f5,
              thixo_f0_f5, casting_rate_mm20min)
         VALUES %s
-        ON CONFLICT (date, line_no) DO NOTHING
+        ON CONFLICT (date, line_no) DO UPDATE SET
+            tank_no               = EXCLUDED.tank_no,
+            type                  = EXCLUDED.type,
+            conc_g200ml           = EXCLUDED.conc_g200ml,
+            temp_c                = EXCLUDED.temp_c,
+            v0_sec100ml           = EXCLUDED.v0_sec100ml,
+            v30_sec100ml          = EXCLUDED.v30_sec100ml,
+            yield_value           = EXCLUDED.yield_value,
+            f0                    = EXCLUDED.f0,
+            f5                    = EXCLUDED.f5,
+            thixo_f0_f5           = EXCLUDED.thixo_f0_f5,
+            casting_rate_mm20min  = EXCLUDED.casting_rate_mm20min
     """, rows)
 
     print(f"  slip_daily_record: {len(rows)} rows inserted")

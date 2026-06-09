@@ -1,7 +1,7 @@
 # CLAUDE.md — ONE-PD / SNK MES Dashboard
 
 > อ่านไฟล์นี้ก่อนทุกครั้งที่เริ่ม session ใหม่
-> อ้างอิง `one-pd-details.md` สำหรับ spec ละเอียด · `progress.md` สำหรับสถานะปัจจุบัน
+> อ้างอิง `docs/one-pd-details.md` สำหรับ spec ละเอียด · `docs/progress.md` สำหรับสถานะปัจจุบัน
 
 ---
 
@@ -11,7 +11,7 @@
 **ระบบ:** Manufacturing Execution System — โรงงานเซรามิค SNK
 **ผู้ใช้:** Production Manager · MD · C-Level
 **หน้าหลัก:** Dashboard overview + 6 Stage Detail pages + Alerts + Reports + Settings
-**ภาพ reference:** `fig-dash.png` — ใช้เป็น ground truth ของ layout และ data
+**ภาพ reference:** `assets/fig-dash.png` — ใช้เป็น ground truth ของ layout และ data
 
 ---
 
@@ -298,6 +298,60 @@ const STAGE_PARAMS = {
 
 ## 12. Current Status
 
-ดูสถานะปัจจุบันได้ที่ `progress.md`
+ดูสถานะปัจจุบันได้ที่ `docs/progress.md`
+
+---
+
+## 13. Project File Map
+
+```
+one-pd/
+├── CLAUDE.md               ← this file (always at root)
+├── schema.md               ← component API, routing, context, CSS vars
+├── index.html              ← Vite entry
+├── vite.config.js
+├── tailwind.config.js
+├── postcss.config.js
+├── package.json
+│
+├── assets/                 ← static reference files
+│   ├── fig-dash.png        ← UI design ground truth
+│   ├── SNK_MES_Proposal.pptx
+│   └── pic1.jpg
+│
+├── data/                   ← seed JSON source files
+│   ├── casters.json
+│   ├── gi_inspectors.json
+│   ├── qrcode_snk.json
+│   ├── slip_prop_records.json
+│   └── slip_prop_standards.json
+│
+├── docs/                   ← project documentation
+│   ├── architecture.md
+│   ├── one-pd-details.md   ← detailed spec
+│   ├── progress.md         ← phase completion tracker
+│   ├── roadmap.md
+│   ├── phase-a.md
+│   ├── Flow and Param.md
+│   ├── 1stprompt.md
+│   ├── architecture/       ← HTML reference diagrams
+│   │   ├── architecture-*.html
+│   │   ├── system-architecture-deployment.html
+│   │   ├── snk-*.html
+│   │   ├── process-optimization.html
+│   │   ├── cloud-cost-calculator.html
+│   │   └── cost-estimation-questionnaire.html
+│   └── prompts/
+│       ├── PROMPT-backend-claude-code.txt
+│       └── 2ndprompt.txt
+│
+├── src/                    ← all application source (see schema.md)
+├── server/                 ← FastAPI backend
+│   ├── app/                ← application code
+│   ├── scripts/            ← seed scripts (DATA_DIR = one-pd/data/)
+│   ├── alembic/            ← DB migrations
+│   └── deploy/             ← systemd service files + install.sh
+└── public/                 ← static assets served by Vite
+```
 
 **เริ่มต้นที่:** Phase 0 — Project Bootstrap

@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SNK MES — Process Optimization Guide</title>
+<style>
+  :root {
+    --bg-page:        #F0F2F5;
+    --bg-card:        #FFFFFF;
+    --border:         #E5E7EB;
+    --text-primary:   #111827;
+    --text-secondary: #6B7280;
+    --accent:         #1E6FCC;
+    --accent-light:   #EFF6FF;
+    --font: 'Inter', 'Segoe UI', sans-serif;
+
+    --emergency-bg:   #FEE2E2; --emergency-text: #991B1B; --emergency-border: #DC2626;
+    --abnormal-bg:    #FEF3C7; --abnormal-text:  #92400E; --abnormal-border: #D97706;
+    --normal-bg:      #DCFCE7; --normal-text:    #166534; --normal-border:   #16A34A;
+    --maint-bg:       #F3F4F6; --maint-text:     #374151; --maint-border:    #9CA3AF;
+
+    --impact-high-bg:    #FEE2E2; --impact-high-text:    #991B1B; --impact-high-border:    #DC2626;
+    --impact-medium-bg:  #FEF3C7; --impact-medium-text:  #92400E; --impact-medium-border:  #D97706;
+    --impact-low-bg:     #EFF6FF; --impact-low-text:     #1E40AF; --impact-low-border:     #3B82F6;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  .header-logo {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 14px; letter-spacing: .5px;
+  }
+  .header-title { font-size: 16px; font-weight: 700; }
+  .header-sub   { font-size: 12px; color: var(--text-secondary); }
+
+  /* ── Stage Tabs ── */
+  .tabs-wrap {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs-wrap::-webkit-scrollbar { display: none; }
+
+  .tab {
+    padding: 14px 18px 12px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all .15s;
+    display: flex; align-items: center; gap: 8px;
+    user-select: none;
+  }
+  .tab:hover { color: var(--accent); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+  .tab-badge {
+    font-size: 10px; font-weight: 700; padding: 1px 6px;
+    border-radius: 10px; text-transform: uppercase; letter-spacing: .3px;
+  }
+  .badge-EMERGENCY  { background: var(--emergency-bg);  color: var(--emergency-text); }
+  .badge-ABNORMAL   { background: var(--abnormal-bg);   color: var(--abnormal-text);  }
+  .badge-NORMAL     { background: var(--normal-bg);     color: var(--normal-text);    }
+  .badge-MAINTENANCE{ background: var(--maint-bg);      color: var(--maint-text);     }
+
+  /* ── Main Content ── */
+  .content { padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+  /* ── Stage Panel ── */
+  .stage-panel { display: none; }
+  .stage-panel.active { display: block; }
+
+  .stage-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+  }
+  .stage-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .stage-title { font-size: 20px; font-weight: 700; }
+  .stage-desc  { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+  /* ── Grid Layout ── */
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px; font-weight: 700; letter-spacing: .5px;
+    text-transform: uppercase; color: var(--text-secondary);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-body { padding: 16px; }
+
+  /* ── Param Row ── */
+  .param-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .param-row:last-child { border-bottom: none; }
+  .param-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 2px; }
+  .param-value { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .param-unit  { font-size: 11px; color: var(--text-secondary); margin-left: 3px; font-weight: 400; }
+  .param-range { font-size: 11px; color: var(--text-secondary); text-align: right; }
+  .param-bar-wrap { margin-top: 4px; }
+  .param-bar-bg {
+    height: 4px; background: var(--border); border-radius: 2px; position: relative; overflow: visible;
+  }
+  .param-bar-fill {
+    height: 4px; border-radius: 2px; position: absolute; top: 0;
+    transition: width .4s;
+  }
+
+  .status-chip {
+    font-size: 10px; font-weight: 700; padding: 2px 8px;
+    border-radius: 10px; letter-spacing: .3px;
+  }
+  .status-EMERGENCY   { background: var(--emergency-bg);  color: var(--emergency-text);  border: 1px solid var(--emergency-border); }
+  .status-ABNORMAL    { background: var(--abnormal-bg);   color: var(--abnormal-text);   border: 1px solid var(--abnormal-border);  }
+  .status-NORMAL      { background: var(--normal-bg);     color: var(--normal-text);     border: 1px solid var(--normal-border);    }
+  .status-MAINTENANCE { background: var(--maint-bg);      color: var(--maint-text);      border: 1px solid var(--maint-border);     }
+
+  /* ── Adjustments ── */
+  .adj-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .adj-card {
+    border-radius: 10px;
+    border: 1px solid;
+    overflow: hidden;
+    cursor: pointer;
+    transition: box-shadow .15s;
+  }
+  .adj-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+
+  .adj-card.impact-HIGH   { border-color: var(--impact-high-border);   background: var(--impact-high-bg);   }
+  .adj-card.impact-MEDIUM { border-color: var(--impact-medium-border); background: var(--impact-medium-bg); }
+  .adj-card.impact-LOW    { border-color: var(--impact-low-border);    background: var(--impact-low-bg);    }
+
+  .adj-header-row {
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .impact-pill {
+    font-size: 10px; font-weight: 800; letter-spacing: .5px;
+    padding: 2px 8px; border-radius: 10px; text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .pill-HIGH   { background: #DC2626; color: #fff; }
+  .pill-MEDIUM { background: #D97706; color: #fff; }
+  .pill-LOW    { background: #3B82F6; color: #fff; }
+
+  .adj-title { font-size: 13px; font-weight: 700; flex: 1; }
+  .adj-title.HIGH-text   { color: var(--impact-high-text);   }
+  .adj-title.MEDIUM-text { color: var(--impact-medium-text); }
+  .adj-title.LOW-text    { color: var(--impact-low-text);    }
+
+  .adj-toggle {
+    font-size: 12px; color: var(--text-secondary);
+    transition: transform .2s;
+  }
+  .adj-toggle.open { transform: rotate(180deg); }
+
+  .adj-body {
+    display: none;
+    padding: 0 14px 14px;
+    border-top: 1px solid rgba(0,0,0,.08);
+  }
+  .adj-body.open { display: block; }
+
+  .section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .5px;
+    text-transform: uppercase; color: var(--text-secondary);
+    margin: 10px 0 6px;
+  }
+
+  .problem-list { list-style: none; }
+  .problem-list li {
+    padding: 4px 0;
+    font-size: 13px;
+    display: flex; align-items: flex-start; gap: 6px;
+    color: #374151;
+  }
+  .problem-list li::before { content: "⚠️"; flex-shrink: 0; }
+
+  .action-list { list-style: none; counter-reset: action-count; }
+  .action-list li {
+    counter-increment: action-count;
+    padding: 5px 0 5px 24px;
+    font-size: 13px; color: #374151; position: relative;
+    border-bottom: 1px dashed rgba(0,0,0,.07);
+  }
+  .action-list li:last-child { border-bottom: none; }
+  .action-list li::before {
+    content: counter(action-count);
+    position: absolute; left: 0; top: 6px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    font-size: 9px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .outcome-box {
+    background: rgba(255,255,255,.6);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 8px;
+  }
+  .outcome-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 0; font-size: 13px;
+  }
+  .outcome-key { color: #374151; }
+  .outcome-val { font-weight: 700; }
+  .outcome-val.positive { color: #16A34A; }
+  .outcome-val.negative { color: #DC2626; }
+  .outcome-val.neutral  { color: #1E6FCC; }
+
+  /* ── Timeline Arrow ── */
+  .flow-arrow {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: var(--text-secondary); padding: 8px 0;
+  }
+
+  /* ── Summary bar ── */
+  .summary-strip {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    display: flex; gap: 24px; flex-wrap: wrap;
+    align-items: center;
+  }
+  .summary-item { display: flex; flex-direction: column; }
+  .summary-label { font-size: 10px; color: var(--text-secondary); font-weight: 600; letter-spacing: .3px; text-transform: uppercase; }
+  .summary-value { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .summary-divider { width: 1px; height: 36px; background: var(--border); }
+
+  /* ── Defect Tags ── */
+  .defect-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .defect-tag {
+    font-size: 11px; font-weight: 600; padding: 3px 10px;
+    border-radius: 20px; border: 1px solid;
+  }
+  .tag-pinhole     { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
+  .tag-crack       { background: #FEF3C7; color: #92400E; border-color: #FCD34D; }
+  .tag-discolor    { background: #EDE9FE; color: #5B21B6; border-color: #A78BFA; }
+  .tag-deform      { background: #FFF7ED; color: #9A3412; border-color: #FDBA74; }
+  .tag-grain       { background: #F0FDF4; color: #166534; border-color: #86EFAC; }
+  .tag-glaze-skip  { background: #F0F9FF; color: #075985; border-color: #7DD3FC; }
+  .tag-surface     { background: #F5F3FF; color: #4C1D95; border-color: #C4B5FD; }
+
+  /* progress indicator */
+  .progress-bar {
+    height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 6px;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 3px;
+    background: linear-gradient(90deg, #1E6FCC, #4F8EE8);
+    transition: width .5s ease;
+  }
+
+  .highlight { background: #FFFBEB; border-left: 3px solid #D97706; padding: 6px 10px; border-radius: 0 6px 6px 0; font-size: 12px; margin: 8px 0; }
+
+  h3.section-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     HEADER
+════════════════════════════════════════════════════ -->
+<div class="header">
+  <div class="header-logo">SNK</div>
+  <div>
+    <div class="header-title">Process Optimization Guide</div>
+    <div class="header-sub">SNK MES · โรงงานเซรามิค · ปัญหา → การปรับ Process → ผลลัพธ์</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     STAGE TABS
+════════════════════════════════════════════════════ -->
+<div class="tabs-wrap">
+  <div class="tab active" onclick="showStage('slip-prep')" id="tab-slip-prep">
+    🏺 Slip Prep <span class="tab-badge badge-EMERGENCY">EMERGENCY</span>
+  </div>
+  <div class="tab" onclick="showStage('glaze-prep')" id="tab-glaze-prep">
+    🎨 Glaze Prep <span class="tab-badge badge-NORMAL">NORMAL</span>
+  </div>
+  <div class="tab" onclick="showStage('casting')" id="tab-casting">
+    🔩 Casting <span class="tab-badge badge-ABNORMAL">ABNORMAL</span>
+  </div>
+  <div class="tab" onclick="showStage('drying')" id="tab-drying">
+    💨 Drying <span class="tab-badge badge-NORMAL">NORMAL</span>
+  </div>
+  <div class="tab" onclick="showStage('spraying')" id="tab-spraying">
+    🤖 Spraying <span class="tab-badge badge-NORMAL">NORMAL</span>
+  </div>
+  <div class="tab" onclick="showStage('firing')" id="tab-firing">
+    🔥 Firing <span class="tab-badge badge-MAINTENANCE">MAINTENANCE</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     CONTENT
+════════════════════════════════════════════════════ -->
+<div class="content">
+
+<!-- ─────────────────────────────────────────────────
+     SLIP PREP
+───────────────────────────────────────────────── -->
+<div class="stage-panel active" id="panel-slip-prep">
+  <div class="stage-header">
+    <div class="stage-icon" style="background:#FEE2E2">🏺</div>
+    <div>
+      <div class="stage-title">Body Slip Preparation</div>
+      <div class="stage-desc">การเตรียม Slip ดินสำหรับ Casting · ควบคุม Viscosity, Concentration, Temperature</div>
+    </div>
+  </div>
+
+  <div class="summary-strip">
+    <div class="summary-item">
+      <span class="summary-label">Viscosity V0</span>
+      <span class="summary-value" style="color:#DC2626">940 cP</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">UCL / LCL</span>
+      <span class="summary-value" style="font-size:14px;color:#6B7280">900 / 700 cP</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">เกิน UCL ต่อเนื่อง</span>
+      <span class="summary-value" style="color:#DC2626">45 min</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">Defect Spike</span>
+      <span class="summary-value" style="color:#DC2626">+312%</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">Correlation (r)</span>
+      <span class="summary-value" style="color:#D97706">0.82</span>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <!-- LEFT: Params -->
+    <div>
+      <div class="card">
+        <div class="card-header">📊 Parameters ปัจจุบัน</div>
+        <div class="card-body">
+
+          <div class="param-row">
+            <div>
+              <div class="param-label">Viscosity V0</div>
+              <div><span class="param-value" style="color:#DC2626">940</span><span class="param-unit">cP</span></div>
+              <div class="param-range">UCL 900 | LCL 700</div>
+              <div class="param-bar-wrap">
+                <div class="param-bar-bg"><div class="param-bar-fill" style="width:100%;background:#DC2626"></div></div>
+              </div>
+            </div>
+            <span class="status-chip status-EMERGENCY">EMERGENCY</span>
+          </div>
+
+          <div class="param-row">
+            <div>
+              <div class="param-label">Viscosity V30</div>
+              <div><span class="param-value">820</span><span class="param-unit">cP</span></div>
+              <div class="param-range">UCL 880 | LCL 680</div>
+              <div class="param-bar-wrap">
+                <div class="param-bar-bg"><div class="param-bar-fill" style="width:70%;background:#16A34A"></div></div>
+              </div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+
+          <div class="param-row">
+            <div>
+              <div class="param-label">Concentration</div>
+              <div><span class="param-value">1.62</span><span class="param-unit">g/cm³</span></div>
+              <div class="param-range">UCL 1.68 | LCL 1.58</div>
+              <div class="param-bar-wrap">
+                <div class="param-bar-bg"><div class="param-bar-fill" style="width:40%;background:#16A34A"></div></div>
+              </div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+
+          <div class="param-row">
+            <div>
+              <div class="param-label">Temperature</div>
+              <div><span class="param-value">28.5</span><span class="param-unit">°C</span></div>
+              <div class="param-range">UCL 32 | LCL 24</div>
+              <div class="param-bar-wrap">
+                <div class="param-bar-bg"><div class="param-bar-fill" style="width:55%;background:#16A34A"></div></div>
+              </div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+
+          <div class="param-row">
+            <div>
+              <div class="param-label">Casting Rate</div>
+              <div><span class="param-value">58</span><span class="param-unit">pcs/hr</span></div>
+              <div class="param-range">UCL 65 | LCL 50</div>
+              <div class="param-bar-wrap">
+                <div class="param-bar-bg"><div class="param-bar-fill" style="width:53%;background:#16A34A"></div></div>
+              </div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="card-header">🔍 Defect ที่เกิดขึ้น</div>
+        <div class="card-body">
+          <div class="defect-tags">
+            <span class="defect-tag tag-pinhole">Pinhole ⚡ 6,513 pcs</span>
+            <span class="defect-tag tag-crack">Crack 1,234 pcs</span>
+            <span class="defect-tag tag-grain">Grain Size ↑</span>
+          </div>
+          <div class="highlight" style="margin-top:12px">
+            Viscosity V0 สูงเกิน UCL → Slip หนืดเกินไป → Air ติดใน Slip → <strong>Pinhole</strong> เพิ่มขึ้น 312% ในช่วง 10:00–11:00
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Adjustments -->
+    <div>
+      <h3 class="section-title">💡 การปรับ Process — เรียงจากผลลัพธ์ดีที่สุด</h3>
+      <div class="adj-list">
+
+        <!-- HIGH IMPACT -->
+        <div class="adj-card impact-HIGH" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-HIGH">⚡ High Impact</span>
+            <span class="adj-title HIGH-text">เติม Deflocculant / ปรับลด Viscosity โดยตรง</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>Viscosity V0 = 940 cP เกิน UCL 900 cP (+4.4%)</li>
+              <li>Slip หนืดเกินไป → Air bubble ติดค้าง → Pinhole</li>
+              <li>Flow rate ในแม่พิมพ์ต่ำ → Casting rate ลด</li>
+            </ul>
+
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>วัด Viscosity V0 ซ้ำด้วย Viscometer → ยืนยันค่า 940 cP</li>
+              <li>เติม Sodium Silicate (Deflocculant) ทีละ 0.05% → คนผสม 5 นาที → วัดซ้ำ</li>
+              <li>เป้าหมาย: ลด Viscosity V0 → 820–860 cP (ใน Control Zone)</li>
+              <li>ถ้า Viscosity ยังสูง → เติมน้ำ DI 0.5–1% ของ batch weight</li>
+              <li>Recheck V30 ให้อยู่ใน 680–880 cP พร้อมกัน</li>
+            </ol>
+
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Pinhole defect</span><span class="outcome-val positive">↓ 60–75%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Casting Rate</span><span class="outcome-val positive">↑ กลับ 63–65 pcs/hr</span></div>
+              <div class="outcome-row"><span class="outcome-key">เวลาแก้ไข</span><span class="outcome-val neutral">15–20 นาที</span></div>
+              <div class="outcome-row"><span class="outcome-key">ความยาก</span><span class="outcome-val neutral">⭐ ง่าย</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:90%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~90%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HIGH IMPACT 2 -->
+        <div class="adj-card impact-HIGH" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-HIGH">⚡ High Impact</span>
+            <span class="adj-title HIGH-text">ตรวจสอบ Ball Mill Speed + อุณหภูมิน้ำ (Root Cause)</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>Viscosity สูงซ้ำๆ ในช่วงเวลาเดิม → ต้นเหตุไม่ได้แก้</li>
+              <li>Ball Mill หมุนเร็วเกินไป → Particle ละเอียดเกิน → Viscosity สูง</li>
+              <li>น้ำอุ่นเกินไป → Deflocculant เสื่อมประสิทธิภาพ</li>
+            </ul>
+
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>ตรวจ Ball Mill RPM → เทียบกับ Recipe spec → ปรับลดถ้าสูงเกิน 5%</li>
+              <li>วัดอุณหภูมิน้ำที่ใช้ผสม → ต้องอยู่ที่ 20–26°C (ห้ามเกิน 28°C)</li>
+              <li>ตรวจสอบ Grinding time → ถ้านานเกิน → ลด 10–15 นาที</li>
+              <li>ตรวจ Particle Size Distribution → ควร D50 &lt; 8 μm</li>
+              <li>Log ผลทุก batch → หา Pattern ว่าเกิดช่วงกะไหน</li>
+            </ol>
+
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Viscosity spike ระยะยาว</span><span class="outcome-val positive">↓ 80–90%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Batch-to-batch variance</span><span class="outcome-val positive">ลดลงมาก</span></div>
+              <div class="outcome-row"><span class="outcome-key">เวลาแก้ไข</span><span class="outcome-val neutral">1–2 วัน (ปรับ + ทดสอบ)</span></div>
+              <div class="outcome-row"><span class="outcome-key">ความยาก</span><span class="outcome-val neutral">⭐⭐ ปานกลาง</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:85%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~85%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MEDIUM IMPACT -->
+        <div class="adj-card impact-MEDIUM" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-MEDIUM">🔶 Medium Impact</span>
+            <span class="adj-title MEDIUM-text">เพิ่มเวลา Aging Slip ก่อน Casting</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>Slip ใหม่มี Air bubble มาก → ต้องให้ Air หนีออกก่อน</li>
+              <li>Thixotropy ยังไม่ Stabilize → Flow behavior ไม่สม่ำเสมอ</li>
+            </ul>
+
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>เพิ่ม Aging time จาก 4 ชั่วโมงเป็น 6–8 ชั่วโมง ก่อนส่ง Casting</li>
+              <li>ระหว่าง Aging → คน Slip เบาๆ ทุก 2 ชั่วโมง (Slow Agitator)</li>
+              <li>ตรวจสอบ Thixotropy (V0–V30 ratio) ควรอยู่ที่ 0.85–0.95</li>
+            </ol>
+
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Pinhole จาก Air bubble</span><span class="outcome-val positive">↓ 30–40%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Surface defect</span><span class="outcome-val positive">↓ 15–20%</span></div>
+              <div class="outcome-row"><span class="outcome-key">เวลาเพิ่มขึ้น</span><span class="outcome-val negative">+2–4 hr/batch</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:55%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~55%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LOW IMPACT -->
+        <div class="adj-card impact-LOW" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-LOW">🔵 Low Impact</span>
+            <span class="adj-title LOW-text">ติดตั้ง In-line Viscometer อัตโนมัติ</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>ตรวจ Viscosity แบบ Manual ช้า → แก้ปัญหาล่าช้า 45+ นาที</li>
+              <li>ขาด Real-time feedback → ปรับแก้ไม่ทันก่อน Defect เกิด</li>
+            </ul>
+
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>ติดตั้ง In-line Viscometer ที่ท่อส่ง Slip → ป้อนข้อมูลเข้า MES</li>
+              <li>ตั้ง Alert เมื่อ Viscosity เกิน 870 cP (Soft limit ก่อน UCL)</li>
+              <li>ระบบ MES สั่ง auto-dose Deflocculant หรือแจ้ง Operator</li>
+            </ol>
+
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Response time</span><span class="outcome-val positive">ลดจาก 45 → 5 min</span></div>
+              <div class="outcome-row"><span class="outcome-key">Defect จาก Viscosity spike</span><span class="outcome-val positive">↓ 20–30%</span></div>
+              <div class="outcome-row"><span class="outcome-key">ต้นทุนลงทุน</span><span class="outcome-val negative">สูง (Hardware)</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:30%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลระยะสั้น: ~30% (แต่ดีมากระยะยาว)</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────
+     GLAZE PREP
+───────────────────────────────────────────────── -->
+<div class="stage-panel" id="panel-glaze-prep">
+  <div class="stage-header">
+    <div class="stage-icon" style="background:#DCFCE7">🎨</div>
+    <div>
+      <div class="stage-title">Glaze Slip Preparation</div>
+      <div class="stage-desc">การเตรียม Glaze สำหรับ Spraying · ควบคุม Particle Size, Concentration, Viscosity</div>
+    </div>
+  </div>
+
+  <div class="summary-strip">
+    <div class="summary-item">
+      <span class="summary-label">Status</span>
+      <span class="summary-value" style="color:#16A34A">NORMAL</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">Particle Size</span>
+      <span class="summary-value" style="color:#111827">3.2%</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">Concentration</span>
+      <span class="summary-value" style="color:#111827">1.44 g/L</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">Residue</span>
+      <span class="summary-value" style="color:#111827">0.8%</span>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div>
+      <div class="card">
+        <div class="card-header">📊 Parameters ปัจจุบัน</div>
+        <div class="card-body">
+          <div class="param-row">
+            <div>
+              <div class="param-label">% Particle Size</div>
+              <div><span class="param-value">3.2</span><span class="param-unit">%</span></div>
+              <div class="param-range">UCL 4.0 | LCL 2.0</div>
+              <div class="param-bar-wrap"><div class="param-bar-bg"><div class="param-bar-fill" style="width:60%;background:#16A34A"></div></div></div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+          <div class="param-row">
+            <div>
+              <div class="param-label">Concentration</div>
+              <div><span class="param-value">1.44</span><span class="param-unit">g/L</span></div>
+              <div class="param-range">UCL 1.50 | LCL 1.38</div>
+              <div class="param-bar-wrap"><div class="param-bar-bg"><div class="param-bar-fill" style="width:50%;background:#16A34A"></div></div></div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+          <div class="param-row">
+            <div>
+              <div class="param-label">Viscosity V0</div>
+              <div><span class="param-value">760</span><span class="param-unit">cP</span></div>
+              <div class="param-range">UCL 850 | LCL 650</div>
+              <div class="param-bar-wrap"><div class="param-bar-bg"><div class="param-bar-fill" style="width:55%;background:#16A34A"></div></div></div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+          <div class="param-row">
+            <div>
+              <div class="param-label">% Residue</div>
+              <div><span class="param-value">0.8</span><span class="param-unit">%</span></div>
+              <div class="param-range">UCL 1.5 | LCL 0.2</div>
+              <div class="param-bar-wrap"><div class="param-bar-bg"><div class="param-bar-fill" style="width:46%;background:#16A34A"></div></div></div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="card-header">🔍 Defect ที่เสี่ยงเกิดขึ้น</div>
+        <div class="card-body">
+          <div class="defect-tags">
+            <span class="defect-tag tag-pinhole">Pinhole (ถ้า Particle ใหญ่)</span>
+            <span class="defect-tag tag-surface">Surface Rough</span>
+            <span class="defect-tag tag-discolor">Discoloration (ถ้า Conc. เบี่ยง)</span>
+          </div>
+          <div class="highlight" style="margin-top:12px">
+            ปัจจุบัน NORMAL แต่ควร Monitor Particle Size ไม่ให้เกิน 3.8% เพื่อป้องกัน Pinhole ใน Glaze layer
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="section-title">💡 การปรับ Process — เพื่อป้องกัน & เพิ่มคุณภาพ</h3>
+      <div class="adj-list">
+
+        <div class="adj-card impact-HIGH" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-HIGH">⚡ High Impact</span>
+            <span class="adj-title HIGH-text">ลด Particle Size → ป้องกัน Pinhole ใน Glaze</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>Particle ใหญ่เกิน (>3.5%) → ละลายไม่หมดใน Kiln → Pinhole บนผิว Glaze</li>
+              <li>Surface texture ไม่สม่ำเสมอ → ลักษณะผิวด้าน/ขรุขระ</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>เพิ่มเวลา Milling 15–20 นาที → ตรวจ Particle Size ใหม่ด้วย Laser Diffraction</li>
+              <li>Target: D50 &lt; 6 μm, % Residue &lt; 0.6% (ร่อนตะแกรง 45 μm)</li>
+              <li>เปลี่ยน Grinding Media ถ้าสึกเกิน 20% ของน้ำหนักเริ่มต้น</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Glaze Pinhole</span><span class="outcome-val positive">↓ 50–60%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Surface quality</span><span class="outcome-val positive">เพิ่มขึ้นชัดเจน</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:75%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~75%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adj-card impact-MEDIUM" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-MEDIUM">🔶 Medium Impact</span>
+            <span class="adj-title MEDIUM-text">ควบคุม Concentration ให้คงที่ใน Narrow Band</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>Concentration เบี่ยงเบน → ความหนา Glaze ต่างกันแต่ละ batch → Discoloration</li>
+              <li>Glaze หนา/บางเกินไป → Crawling หรือ Bare spot</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>วัด Concentration ด้วย Pycnometer ทุก 2 ชั่วโมงระหว่าง Production</li>
+              <li>ตั้ง Narrow Control Band: 1.42–1.46 g/L (แคบกว่า UCL/LCL)</li>
+              <li>ถ้าออกนอก Narrow Band → Auto-add น้ำ หรือ Glaze Concentrate ทันที</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Color consistency</span><span class="outcome-val positive">↑ 25–35%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Glaze thickness variance</span><span class="outcome-val positive">↓ 40%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:50%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~50%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adj-card impact-LOW" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-LOW">🔵 Low Impact</span>
+            <span class="adj-title LOW-text">กรอง Rust ด้วย Magnetic Separator</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>Iron spot / สนิมบนผิว Glaze จาก Ferrous contamination ใน Raw material</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>ติด Magnetic Bar ในท่อส่ง Glaze → ดักอนุภาค Fe ก่อนถึง Spray gun</li>
+              <li>ทำความสะอาด Magnetic Bar ทุก 4 ชั่วโมง</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Iron spot defect</span><span class="outcome-val positive">↓ 70–80%</span></div>
+              <div class="outcome-row"><span class="outcome-key">ผลต่อ Defect อื่น</span><span class="outcome-val neutral">น้อยมาก</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:20%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~20% (specific เฉพาะ Iron spot)</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────
+     CASTING
+───────────────────────────────────────────────── -->
+<div class="stage-panel" id="panel-casting">
+  <div class="stage-header">
+    <div class="stage-icon" style="background:#FEF3C7">🔩</div>
+    <div>
+      <div class="stage-title">Casting</div>
+      <div class="stage-desc">การหล่อในแม่พิมพ์ปูน · ควบคุม Mold Cycle, Mold Condition, Caster Performance</div>
+    </div>
+  </div>
+
+  <div class="summary-strip">
+    <div class="summary-item">
+      <span class="summary-label">Mold Cycle</span>
+      <span class="summary-value" style="color:#D97706">38 min</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">Target Cycle</span>
+      <span class="summary-value" style="color:#16A34A">28 min</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">เกินเป้า</span>
+      <span class="summary-value" style="color:#D97706">+35.7%</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">Active Molds</span>
+      <span class="summary-value">147 molds</span>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div>
+      <div class="card">
+        <div class="card-header">📊 Parameters ปัจจุบัน</div>
+        <div class="card-body">
+          <div class="param-row">
+            <div>
+              <div class="param-label">Mold Cycle</div>
+              <div><span class="param-value" style="color:#D97706">38</span><span class="param-unit">min</span></div>
+              <div class="param-range">UCL 32 | LCL 24</div>
+              <div class="param-bar-wrap"><div class="param-bar-bg"><div class="param-bar-fill" style="width:100%;background:#D97706"></div></div></div>
+            </div>
+            <span class="status-chip status-ABNORMAL">ABNORMAL</span>
+          </div>
+          <div class="param-row">
+            <div>
+              <div class="param-label">Active Molds</div>
+              <div><span class="param-value">147</span><span class="param-unit">molds</span></div>
+              <div class="param-range">UCL 160 | LCL 100</div>
+              <div class="param-bar-wrap"><div class="param-bar-bg"><div class="param-bar-fill" style="width:73%;background:#16A34A"></div></div></div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+          <div class="param-row">
+            <div>
+              <div class="param-label">Active Casters</div>
+              <div><span class="param-value">12</span><span class="param-unit">casters</span></div>
+              <div class="param-range">UCL 14 | LCL 8</div>
+              <div class="param-bar-wrap"><div class="param-bar-bg"><div class="param-bar-fill" style="width:67%;background:#16A34A"></div></div></div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="card-header">🔍 Defect ที่เกิดขึ้น</div>
+        <div class="card-body">
+          <div class="defect-tags">
+            <span class="defect-tag tag-grain">Grain Size ใหญ่</span>
+            <span class="defect-tag tag-crack">Crack บริเวณขอบ</span>
+            <span class="defect-tag tag-deform">Deformation</span>
+          </div>
+          <div class="highlight" style="margin-top:12px">
+            Mold Cycle ยาวขึ้น → Mold ดูด Moisture มากเกิน → ชิ้นงานติดแม่พิมพ์ → <strong>Crack</strong> ตอน Demold + Grain Size ผิดปกติ
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="section-title">💡 การปรับ Process — เรียงจากผลลัพธ์ดีที่สุด</h3>
+      <div class="adj-list">
+
+        <div class="adj-card impact-HIGH" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-HIGH">⚡ High Impact</span>
+            <span class="adj-title HIGH-text">เปลี่ยน / Repair Mold ที่สึกหรอ</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>Mold เก่า ดูดซับน้ำจาก Slip ได้ช้า → Cycle time ยาว</li>
+              <li>ผิว Mold หยาบ → Grain Size ชิ้นงานใหญ่</li>
+              <li>Mold ร้าว/แตก → Seam line บนชิ้นงาน, Deformation</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>Inspect Mold ทุกใบ → วัด Mold Cycle แยกรายใบ → หาตัวที่ช้าผิดปกติ (&gt;33 min)</li>
+              <li>Mold ที่ Cycle &gt;33 min → ส่ง Repair (อุดรอย, ขัดผิว) หรือ Replace</li>
+              <li>ตรวจสอบ Mold Age → หมุนเวียน Mold ตามอายุ (เช่น ไม่เกิน 500 cycles)</li>
+              <li>ทาน้ำยา Mold Release ใหม่หลัง Repair ทุกครั้ง</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Mold Cycle</span><span class="outcome-val positive">↓ กลับ 26–29 min</span></div>
+              <div class="outcome-row"><span class="outcome-key">Crack ตอน Demold</span><span class="outcome-val positive">↓ 55–65%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Grain Size defect</span><span class="outcome-val positive">↓ 40–50%</span></div>
+              <div class="outcome-row"><span class="outcome-key">เวลาแก้ไข</span><span class="outcome-val neutral">1–3 วัน</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:85%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~85%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adj-card impact-HIGH" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-HIGH">⚡ High Impact</span>
+            <span class="adj-title HIGH-text">ปรับ Slip Viscosity → ลด Casting Time</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>Viscosity V0 สูง (940 cP) → Slip ไหลเข้า Mold ช้า → Wall formation ช้า</li>
+              <li>เชื่อมโยงกับ Slip Prep Emergency → แก้ที่ต้นทาง = ผลโดยตรง</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>แก้ Viscosity V0 ให้อยู่ที่ 820–860 cP (ดูขั้นตอน Slip Prep)</li>
+              <li>ทดสอบ Casting time หลังปรับ Viscosity → ควรลดได้ 6–10 นาที</li>
+              <li>อย่าให้ Viscosity ต่ำเกินไป (&lt;700 cP) → Slip บางเกิน → Wall얇 เกิน → Crack</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Mold Cycle</span><span class="outcome-val positive">↓ 6–10 min</span></div>
+              <div class="outcome-row"><span class="outcome-key">Throughput</span><span class="outcome-val positive">↑ 15–20%</span></div>
+              <div class="outcome-row"><span class="outcome-key">เวลาแก้ไข</span><span class="outcome-val neutral">ทันที (ถ้าแก้ Slip Prep แล้ว)</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:80%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~80%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adj-card impact-MEDIUM" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-MEDIUM">🔶 Medium Impact</span>
+            <span class="adj-title MEDIUM-text">ควบคุมความชื้นห้อง Casting</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>ความชื้นสูงในอากาศ → Mold ดูดน้ำช้า → Cycle ยาว</li>
+              <li>Seasonal variation → Cycle time ไม่คงที่ระหว่างหน้าฝน/หน้าร้อน</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>ติดตั้ง Dehumidifier ในห้อง Casting → รักษา RH ที่ 50–60%</li>
+              <li>Monitor อุณหภูมิ/ความชื้น ทุก 30 นาที → Log เข้า MES</li>
+              <li>ปรับ Casting time ตาม Seasonal factor ที่วัดได้</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Cycle time variance</span><span class="outcome-val positive">↓ 30–40%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Consistency ระหว่างกะ</span><span class="outcome-val positive">เพิ่มขึ้น</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:45%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~45%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adj-card impact-LOW" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-LOW">🔵 Low Impact</span>
+            <span class="adj-title LOW-text">ปรับ Filling Pressure / Flow Rate</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>Filling ช้า → เพิ่ม Air entrapment → Pinhole ใน Body</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>เพิ่ม Filling pressure จาก 0.5 → 0.7 bar (ค่อยๆ ทดสอบ)</li>
+              <li>ตรวจ Flash/Seam line ว่าเพิ่มขึ้นไหมหลังปรับ</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Filling time</span><span class="outcome-val positive">↓ 1–2 min</span></div>
+              <div class="outcome-row"><span class="outcome-key">Body Pinhole</span><span class="outcome-val positive">↓ 10–15%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:20%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~20%</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────
+     DRYING
+───────────────────────────────────────────────── -->
+<div class="stage-panel" id="panel-drying">
+  <div class="stage-header">
+    <div class="stage-icon" style="background:#EFF6FF">💨</div>
+    <div>
+      <div class="stage-title">Drying</div>
+      <div class="stage-desc">การอบแห้งชิ้นงาน · ควบคุม % Moisture Content และ Drying Curve</div>
+    </div>
+  </div>
+
+  <div class="summary-strip">
+    <div class="summary-item">
+      <span class="summary-label">Moisture Content</span>
+      <span class="summary-value" style="color:#16A34A">13.2%</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">Range</span>
+      <span class="summary-value" style="font-size:14px;color:#6B7280">8–15%</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">Drying Curve</span>
+      <span class="summary-value" style="color:#16A34A">98.5%</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">Status</span>
+      <span class="summary-value" style="color:#16A34A">NORMAL</span>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div>
+      <div class="card">
+        <div class="card-header">📊 Parameters ปัจจุบัน</div>
+        <div class="card-body">
+          <div class="param-row">
+            <div>
+              <div class="param-label">% Moisture Content</div>
+              <div><span class="param-value">13.2</span><span class="param-unit">%</span></div>
+              <div class="param-range">UCL 15 | LCL 8</div>
+              <div class="param-bar-wrap"><div class="param-bar-bg"><div class="param-bar-fill" style="width:75%;background:#16A34A"></div></div></div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+          <div class="param-row">
+            <div>
+              <div class="param-label">Drying Curve Compliance</div>
+              <div><span class="param-value">98.5</span><span class="param-unit">%</span></div>
+              <div class="param-range">UCL 100 | LCL 92</div>
+              <div class="param-bar-wrap"><div class="param-bar-bg"><div class="param-bar-fill" style="width:91%;background:#16A34A"></div></div></div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="card-header">🔍 Defect ที่เสี่ยงเกิด</div>
+        <div class="card-body">
+          <div class="defect-tags">
+            <span class="defect-tag tag-crack">Crack (Moisture สูง/ต่ำเกิน)</span>
+            <span class="defect-tag tag-deform">Deformation</span>
+          </div>
+          <div class="highlight" style="margin-top:12px">
+            ปัจจุบัน Moisture 13.2% ใกล้ UCL 15% — ถ้า Drying ไม่สม่ำเสมอ บางจุดอาจเกิน → <strong>Crack</strong> ตอนเข้า Kiln (Thermal Shock)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="section-title">💡 การปรับ Process — เรียงจากผลลัพธ์ดีที่สุด</h3>
+      <div class="adj-list">
+
+        <div class="adj-card impact-HIGH" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-HIGH">⚡ High Impact</span>
+            <span class="adj-title HIGH-text">ปรับ Drying Curve — ลด Moisture ให้ต่ำ &amp; สม่ำเสมอ</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>Moisture 13.2% ใกล้ขอบ UCL → risk สูงถ้า Casting มาในช่วง Mold Cycle ยาว</li>
+              <li>Drying ไม่สม่ำเสมอ (Core ชื้นกว่า Surface) → Crack ใน Kiln</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>ลด Target Moisture จาก &lt;15% เป็น &lt;12% ก่อนออกจาก Dryer</li>
+              <li>เพิ่ม Drying time 10–15% หรือ เพิ่มอุณหภูมิ Dryer 3–5°C ในช่วง Mid-stage</li>
+              <li>ติดตั้ง Moisture Sensor หลายจุดในรถเข็น → Map ความสม่ำเสมอ</li>
+              <li>หมุน/พลิกชิ้นงานระหว่าง Drying ถ้าทำได้ → Uniform drying</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Crack ใน Firing</span><span class="outcome-val positive">↓ 45–55%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Moisture variance</span><span class="outcome-val positive">↓ 60%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Energy ใช้</span><span class="outcome-val negative">↑ 5–10%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:78%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~78%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adj-card impact-MEDIUM" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-MEDIUM">🔶 Medium Impact</span>
+            <span class="adj-title MEDIUM-text">ปรับ Airflow Distribution ในห้อง Dryer</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>บาง Zone ของ Dryer ลมน้อย → ชิ้นงานบาง Position ชื้นกว่า</li>
+              <li>ชิ้นงานแถวล่างได้รับความร้อนน้อยกว่า → Moisture สูงกว่า</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>วัด Airflow velocity แต่ละ Zone → Map จุด Dead Zone</li>
+              <li>ปรับ Duct damper หรือ เพิ่ม Fan เสริมใน Zone ที่ลมน้อย</li>
+              <li>Retest Moisture uniformity ใน 3 Position: บน-กลาง-ล่าง</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Moisture uniformity</span><span class="outcome-val positive">↑ 35–45%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Crack จาก Uneven drying</span><span class="outcome-val positive">↓ 30%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:50%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~50%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adj-card impact-MEDIUM" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-MEDIUM">🔶 Medium Impact</span>
+            <span class="adj-title MEDIUM-text">ตรวจ Moisture ก่อนส่ง Spraying ทุก Batch</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>ชิ้นงานออกจาก Dryer แต่ยังชื้นเกิน → Spray Glaze ไม่ติด → Crawling</li>
+              <li>ขาด Go/No-Go checkpoint → ของเสียส่งต่อไป Firing</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>ตั้ง Checkpoint ก่อน Spraying → วัด Moisture 5 ตัวอย่างต่อ Cart</li>
+              <li>ถ้า Average Moisture &gt;13% → ส่งกลับ Dryer อีก 30–60 นาที</li>
+              <li>บันทึกผลเข้า MES → Track ต่อเนื่อง</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Glaze adhesion problem</span><span class="outcome-val positive">↓ 40–50%</span></div>
+              <div class="outcome-row"><span class="outcome-key">เวลาเพิ่ม</span><span class="outcome-val negative">+5 min/cart inspection</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:52%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~52%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adj-card impact-LOW" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-LOW">🔵 Low Impact</span>
+            <span class="adj-title LOW-text">Optimize Energy Consumption ต่อ Batch</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>Energy cost สูงในช่วง Drying — อาจ Overdry บางชิ้น</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>ติด Smart Meter วัด kWh/batch → Plot กราฟ Trend</li>
+              <li>หา Optimal Drying time ที่ให้ Moisture &lt;12% ด้วย Energy ต่ำสุด</li>
+              <li>Stage-wise temperature profiling: เริ่มต่ำ (40°C) → ขึ้นช้าๆ → ลดท้าย</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Energy cost</span><span class="outcome-val positive">↓ 8–12%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Defect ลดลง</span><span class="outcome-val neutral">เล็กน้อย</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:18%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~18% (ด้าน Quality)</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────
+     SPRAYING
+───────────────────────────────────────────────── -->
+<div class="stage-panel" id="panel-spraying">
+  <div class="stage-header">
+    <div class="stage-icon" style="background:#F0FDF4">🤖</div>
+    <div>
+      <div class="stage-title">Spraying (Glazing)</div>
+      <div class="stage-desc">การฉีด Glaze ด้วย Robot · ควบคุม Thickness, Coverage, Robot Path</div>
+    </div>
+  </div>
+
+  <div class="summary-strip">
+    <div class="summary-item">
+      <span class="summary-label">Glaze Thickness</span>
+      <span class="summary-value" style="color:#16A34A">0.42 mm</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">Range</span>
+      <span class="summary-value" style="font-size:14px;color:#6B7280">0.35–0.50 mm</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">Active Robots</span>
+      <span class="summary-value">3 units</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">Active Sprayers</span>
+      <span class="summary-value">4 units</span>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div>
+      <div class="card">
+        <div class="card-header">📊 Parameters ปัจจุบัน</div>
+        <div class="card-body">
+          <div class="param-row">
+            <div>
+              <div class="param-label">Glaze Thickness</div>
+              <div><span class="param-value">0.42</span><span class="param-unit">mm</span></div>
+              <div class="param-range">UCL 0.50 | LCL 0.35</div>
+              <div class="param-bar-wrap"><div class="param-bar-bg"><div class="param-bar-fill" style="width:47%;background:#16A34A"></div></div></div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+          <div class="param-row">
+            <div>
+              <div class="param-label">Active Sprayers</div>
+              <div><span class="param-value">4</span><span class="param-unit">units</span></div>
+              <div class="param-range">UCL 5 | LCL 2</div>
+              <div class="param-bar-wrap"><div class="param-bar-bg"><div class="param-bar-fill" style="width:67%;background:#16A34A"></div></div></div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+          <div class="param-row">
+            <div>
+              <div class="param-label">Active Robots</div>
+              <div><span class="param-value">3</span><span class="param-unit">units</span></div>
+              <div class="param-range">UCL 4 | LCL 2</div>
+              <div class="param-bar-wrap"><div class="param-bar-bg"><div class="param-bar-fill" style="width:50%;background:#16A34A"></div></div></div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="card-header">🔍 Defect ที่เสี่ยงเกิด</div>
+        <div class="card-body">
+          <div class="defect-tags">
+            <span class="defect-tag tag-discolor">Discoloration (Thickness ไม่สม่ำเสมอ)</span>
+            <span class="defect-tag tag-pinhole">Pinhole ใน Glaze</span>
+            <span class="defect-tag tag-surface">Crawling / Bare Spot</span>
+          </div>
+          <div class="highlight" style="margin-top:12px">
+            Thickness ปัจจุบัน 0.42 mm อยู่ในช่วงดี แต่ถ้า Robot Path หรือ Nozzle มีปัญหา → <strong>Discoloration</strong> หรือ Bare Spot เกิดได้
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="section-title">💡 การปรับ Process — เรียงจากผลลัพธ์ดีที่สุด</h3>
+      <div class="adj-list">
+
+        <div class="adj-card impact-HIGH" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-HIGH">⚡ High Impact</span>
+            <span class="adj-title HIGH-text">Calibrate Robot Path + Spray Angle</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>Robot Path drift ตามเวลา → Thickness ไม่สม่ำเสมอ → Discoloration หลัง Firing</li>
+              <li>Spray Angle ผิด → มุม concave ของชิ้นงานได้ Glaze น้อย → Bare spot</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>Recalibrate Robot ทุก 500 ชิ้น หรือ เปลี่ยนกะ → ตรวจ Teaching Point</li>
+              <li>วัด Thickness ด้วย Wet film gauge หลัง Spray 10 ตัวอย่าง/ชั่วโมง</li>
+              <li>Map Thickness distribution บนชิ้นงาน (Top/Side/Bottom) → ปรับ Path ตาม Map</li>
+              <li>ตรวจ Spray overlap ให้ได้ 30–40% ป้องกัน Bare spot</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Discoloration</span><span class="outcome-val positive">↓ 50–65%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Bare spot / Crawling</span><span class="outcome-val positive">↓ 40–55%</span></div>
+              <div class="outcome-row"><span class="outcome-key">เวลาแก้ไข</span><span class="outcome-val neutral">2–4 ชั่วโมง/Robot</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:82%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~82%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adj-card impact-HIGH" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-HIGH">⚡ High Impact</span>
+            <span class="adj-title HIGH-text">ควบคุม Glaze Viscosity ก่อน Spray</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>Glaze หนืดเกิน → Atomization ไม่ดี → เม็ด Glaze ใหญ่ → Pinhole หลัง Firing</li>
+              <li>Glaze บางเกิน → Drip → Uneven coverage</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>วัด Glaze Viscosity ที่ Spray station ก่อนเริ่ม Production → ต้องอยู่ที่ 720–800 cP</li>
+              <li>ตรวจ Glaze Temperature ที่ Spray station → ควรคงที่ 22–26°C</li>
+              <li>ปรับ Air pressure ที่ Nozzle ให้ได้ Pattern เหมาะสม (ทดสอบบนกระดาษ)</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Glaze Pinhole</span><span class="outcome-val positive">↓ 35–45%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Coverage uniformity</span><span class="outcome-val positive">↑ 25%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:70%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~70%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adj-card impact-MEDIUM" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-MEDIUM">🔶 Medium Impact</span>
+            <span class="adj-title MEDIUM-text">บำรุงรักษา Spray Nozzle สม่ำเสมอ</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>Nozzle อุดตันบางส่วน → Spray pattern ผิดรูป → Thick/Thin spot</li>
+              <li>Nozzle สึก → Droplet ขนาดใหญ่ขึ้น → Texture หยาบ</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>ล้าง Nozzle ทุก 4 ชั่วโมง → แช่ใน Solvent 15 นาที → Air purge</li>
+              <li>เปลี่ยน Nozzle ทุก 2 สัปดาห์ หรือเมื่อ Spray pattern ผิดปกติ</li>
+              <li>ตรวจ Spray pattern ด้วยกระดาษ Spray test ก่อนเริ่มกะ</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Thickness variance</span><span class="outcome-val positive">↓ 20–30%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Surface texture</span><span class="outcome-val positive">ดีขึ้น</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:42%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~42%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adj-card impact-LOW" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-LOW">🔵 Low Impact</span>
+            <span class="adj-title LOW-text">เพิ่ม Rotation Speed ของชิ้นงานระหว่าง Spray</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>ชิ้นงานหมุนช้า → Side บางด้านได้ Glaze มากกว่า</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>เพิ่ม Turntable speed 10–15% → ตรวจ Thickness ว่า Uniform ขึ้นไหม</li>
+              <li>ระวัง: เร็วเกินไป → Glaze กระเด็น → Contamination</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Thickness uniformity</span><span class="outcome-val positive">↑ 10–15%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Defect ลดลง</span><span class="outcome-val neutral">เล็กน้อย</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:18%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~18%</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────
+     FIRING
+───────────────────────────────────────────────── -->
+<div class="stage-panel" id="panel-firing">
+  <div class="stage-header">
+    <div class="stage-icon" style="background:#F3F4F6">🔥</div>
+    <div>
+      <div class="stage-title">Firing (Kiln)</div>
+      <div class="stage-desc">การเผาชิ้นงานใน Kiln · ควบคุม Temperature Profile, Firing Cycle, Loading Density</div>
+    </div>
+  </div>
+
+  <div class="summary-strip">
+    <div class="summary-item">
+      <span class="summary-label">Status</span>
+      <span class="summary-value" style="color:#374151">MAINTENANCE</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">Temperature</span>
+      <span class="summary-value" style="color:#16A34A">1,238°C</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">Firing Cycle</span>
+      <span class="summary-value" style="color:#16A34A">18.5 hr</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">Yield หลัง Firing</span>
+      <span class="summary-value" style="color:#D97706">81%</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-item">
+      <span class="summary-label">Target Yield</span>
+      <span class="summary-value" style="color:#16A34A">88%</span>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div>
+      <div class="card">
+        <div class="card-header">📊 Parameters ปัจจุบัน</div>
+        <div class="card-body">
+          <div class="param-row">
+            <div>
+              <div class="param-label">Temperature</div>
+              <div><span class="param-value">1,238</span><span class="param-unit">°C</span></div>
+              <div class="param-range">UCL 1280 | LCL 1180</div>
+              <div class="param-bar-wrap"><div class="param-bar-bg"><div class="param-bar-fill" style="width:58%;background:#16A34A"></div></div></div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+          <div class="param-row">
+            <div>
+              <div class="param-label">Firing Cycle</div>
+              <div><span class="param-value">18.5</span><span class="param-unit">hr</span></div>
+              <div class="param-range">UCL 20 | LCL 16</div>
+              <div class="param-bar-wrap"><div class="param-bar-bg"><div class="param-bar-fill" style="width:63%;background:#16A34A"></div></div></div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+          <div class="param-row">
+            <div>
+              <div class="param-label">Piece Weight</div>
+              <div><span class="param-value">3.82</span><span class="param-unit">kg</span></div>
+              <div class="param-range">UCL 4.10 | LCL 3.50</div>
+              <div class="param-bar-wrap"><div class="param-bar-bg"><div class="param-bar-fill" style="width:53%;background:#16A34A"></div></div></div>
+            </div>
+            <span class="status-chip status-NORMAL">NORMAL</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="card-header">🔍 Defect ที่เกิดขึ้น</div>
+        <div class="card-body">
+          <div class="defect-tags">
+            <span class="defect-tag tag-crack">Crack (Thermal Shock)</span>
+            <span class="defect-tag tag-discolor">Discoloration</span>
+            <span class="defect-tag tag-deform">Deformation</span>
+          </div>
+          <div class="highlight" style="margin-top:12px">
+            Kiln No.2 เข้า Maintenance → Temperature profile ใน Cooling Zone ต่ำกว่าเกณฑ์ → <strong>Crack</strong> จาก Thermal Shock และ <strong>Discoloration</strong> จาก Uneven heat
+          </div>
+          <div style="margin-top:10px">
+            <div style="font-size:12px;color:#374151">Firing Yield ต่ำกว่า Target:</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+              <div style="flex:1;height:8px;background:#E5E7EB;border-radius:4px;overflow:hidden">
+                <div style="width:81%;height:100%;background:#D97706;border-radius:4px"></div>
+              </div>
+              <span style="font-size:13px;font-weight:700;color:#D97706">81%</span>
+              <span style="font-size:12px;color:#6B7280">/ Target 88%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="section-title">💡 การปรับ Process — เรียงจากผลลัพธ์ดีที่สุด</h3>
+      <div class="adj-list">
+
+        <div class="adj-card impact-HIGH" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-HIGH">⚡ High Impact</span>
+            <span class="adj-title HIGH-text">เร่ง Maintenance Kiln No.2 ให้กลับมา NORMAL</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>Cooling Zone temperature ต่ำ → Thermal gradient สูง → Crack เพิ่มมาก</li>
+              <li>Kiln ไม่ได้ Full capacity → WIP คั่ง → OEE ลด</li>
+              <li>Uneven temperature distribution → Discoloration บางตำแหน่งใน Car</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>Prioritize: ตรวจ Cooling Zone Burner / Fan → ซ่อมภายใน 4–8 ชั่วโมง</li>
+              <li>ตรวจ Thermocouple ใน Cooling zone → ถ้า Drift &gt; 20°C → เปลี่ยนทันที</li>
+              <li>ทำ Temperature profile run (Empty car) ก่อน Resume production</li>
+              <li>ตรวจ Kiln Car refractory → อุดรอยร้าวด้วย Ceramic fibre</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Firing Yield</span><span class="outcome-val positive">↑ จาก 81% → 86–88%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Crack ใน Firing</span><span class="outcome-val positive">↓ 55–65%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Discoloration</span><span class="outcome-val positive">↓ 40–50%</span></div>
+              <div class="outcome-row"><span class="outcome-key">OEE</span><span class="outcome-val positive">↑ 8–12%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:90%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~90%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adj-card impact-HIGH" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-HIGH">⚡ High Impact</span>
+            <span class="adj-title HIGH-text">ปรับ Temperature Ramp Rate ใน Critical Zone</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>Ramp rate เร็วเกินไปใน 573°C (Quartz inversion) → Crack</li>
+              <li>Ramp เร็วที่ 300–400°C → Burn-out organic too fast → Bloating/Crack</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>ช่วง 500–620°C: ลด Ramp rate → ไม่เกิน 80°C/hr (จากเดิมอาจ 120°C/hr)</li>
+              <li>ช่วง 300–450°C: ลด Ramp rate → ไม่เกิน 60°C/hr (Binder burn-out zone)</li>
+              <li>ช่วง Cooling 600–500°C: ลด Cooling rate → ไม่เกิน 100°C/hr</li>
+              <li>ทดสอบ: Run Profile ใหม่กับ 1 Car → ตรวจ Crack rate ก่อน Full production</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Crack จาก Thermal shock</span><span class="outcome-val positive">↓ 45–60%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Firing Cycle</span><span class="outcome-val negative">↑ +1–1.5 hr</span></div>
+              <div class="outcome-row"><span class="outcome-key">Firing Yield</span><span class="outcome-val positive">↑ 3–5%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:75%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~75%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adj-card impact-MEDIUM" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-MEDIUM">🔶 Medium Impact</span>
+            <span class="adj-title MEDIUM-text">ปรับ Loading Density &amp; Car Arrangement</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>โหลดชิ้นงานแน่นเกินไป → ลม circulation ไม่ดี → Hot/Cold spot</li>
+              <li>ชิ้นงานกันลม → ชิ้นด้านในได้รับความร้อนน้อย → Discoloration</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>ลด Loading density 10–15% → เพิ่มระยะห่างระหว่างชิ้นงาน 5–8 mm</li>
+              <li>ใช้ Setters/Spacers ที่ถูกต้อง → ป้องกันชิ้นงานเอียงหรือแตะกัน</li>
+              <li>Stagger การวางชิ้นงานในแนวดิ่ง → ให้ลมผ่านได้ทุก Level</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Discoloration (position-related)</span><span class="outcome-val positive">↓ 30–40%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Throughput</span><span class="outcome-val negative">↓ 10–15% ต่อ Car</span></div>
+              <div class="outcome-row"><span class="outcome-key">Net Yield</span><span class="outcome-val positive">↑ เล็กน้อย (Reject ลด)</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:48%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~48%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adj-card impact-MEDIUM" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-MEDIUM">🔶 Medium Impact</span>
+            <span class="adj-title MEDIUM-text">ตรวจสอบ Glaze Fit (Expansion Coefficient)</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>Glaze expansion มาก/น้อยกว่า Body → Crazing หรือ Peeling หลัง Cooling</li>
+              <li>Glaze Fit ไม่ดี → Crack เป็นร่างแหบนผิว</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>วัด Thermal Expansion Coefficient (TEC) ของ Body และ Glaze</li>
+              <li>Target: TEC Glaze ต่ำกว่า TEC Body เล็กน้อย (Compressive stress in glaze)</li>
+              <li>ถ้า Misfit &gt;0.5×10⁻⁶/°C → ปรับ Formula Glaze เพิ่ม/ลด Silica-Alumina</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Crazing / Peeling</span><span class="outcome-val positive">↓ 60–80%</span></div>
+              <div class="outcome-row"><span class="outcome-key">ผลต่อ Defect อื่น</span><span class="outcome-val neutral">น้อย</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~40% (เฉพาะ Crazing)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adj-card impact-LOW" onclick="toggleAdj(this)">
+          <div class="adj-header-row">
+            <span class="impact-pill pill-LOW">🔵 Low Impact</span>
+            <span class="adj-title LOW-text">ติด Smart Meter วัด Energy ต่อ Firing Cycle</span>
+            <span class="adj-toggle">▼</span>
+          </div>
+          <div class="adj-body">
+            <div class="section-label">ปัญหาที่แก้</div>
+            <ul class="problem-list">
+              <li>ไม่ทราบ Energy profile แต่ละ Car → ไม่รู้ Zone ที่ใช้พลังงานเกิน</li>
+            </ul>
+            <div class="section-label">วิธีการปรับ</div>
+            <ol class="action-list">
+              <li>ติด Smart Meter ทุก Zone → Log kWh ส่งเข้า MES Dashboard</li>
+              <li>Correlate Energy spike กับ Defect rate → หา Root cause</li>
+            </ol>
+            <div class="section-label">ผลลัพธ์ที่คาดหวัง</div>
+            <div class="outcome-box">
+              <div class="outcome-row"><span class="outcome-key">Energy cost</span><span class="outcome-val positive">↓ 5–8%</span></div>
+              <div class="outcome-row"><span class="outcome-key">Defect ลดลงทันที</span><span class="outcome-val neutral">น้อยมาก</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:12%"></div></div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">ประสิทธิผลโดยรวม: ~12% (ด้าน Quality ระยะสั้น)</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+function showStage(id) {
+  // Hide all panels
+  document.querySelectorAll('.stage-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  // Show selected
+  document.getElementById('panel-' + id).classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+}
+
+function toggleAdj(card) {
+  const body = card.querySelector('.adj-body');
+  const arrow = card.querySelector('.adj-toggle');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  arrow.classList.toggle('open', !isOpen);
+}
+
+// Auto-open first card in each panel
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.stage-panel').forEach(panel => {
+    const first = panel.querySelector('.adj-card');
+    if (first) {
+      const body = first.querySelector('.adj-body');
+      const arrow = first.querySelector('.adj-toggle');
+      if (body) body.classList.add('open');
+      if (arrow) arrow.classList.add('open');
+    }
+  });
+});
+</script>
+</body>
+</html>

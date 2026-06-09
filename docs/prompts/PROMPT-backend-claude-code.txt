@@ -1,0 +1,222 @@
+================================================================================
+PROMPT สำหรับ Claude Code (Terminal) — SNK MES Dashboard (one-pd)
+งาน: Backend + Database + เชื่อมกับ Frontend + systemd service
+จัดทำโดย: Dev Team Lead  ·  เป้าหมาย: ส่งให้ Claude Code รันต่อใน repo `one-pd`
+================================================================================
+
+วิธีใช้: เปิด terminal ที่ root ของ repo `one-pd` แล้ววาง prompt ทั้งก้อนนี้
+ให้ Claude Code อ่านก่อนเริ่มทุกครั้ง  (อ่าน CLAUDE.md, roadmap.md, architecture.md,
+phase-a.md, progress.md ประกอบด้วย)
+
+────────────────────────────────────────────────────────────────────────────
+0) บทบาทและกติกาหลัก
+────────────────────────────────────────────────────────────────────────────
+คุณคือ Senior Full-Stack/Platform Engineer ที่เข้ามารับงานต่อจากทีม frontend.
+Frontend (React 18 + Vite + Tailwind + Recharts) เสร็จแล้ว 100% และรันด้วย
+mock data จาก `src/data/mock.js`. งานของคุณคือสร้าง **backend จริง + ฐานข้อมูล**
+แล้ว **ค่อย ๆ swap mock ออกเป็น API จริง** โดยไม่ทำ UI พัง.
+
+กฎเหล็ก (ห้ามฝ่าฝืน):
+- ห้ามแก้ CSS string ใน `src/components/layout/Sidebar.jsx` (เป็น CSS-in-JS)
+- ห้าม hardcode สี — ใช้ CSS variables ที่มีอยู่
+- ห้ามเปลี่ยน chart library (ใช้ Recharts เท่านั้น)
+- ห้ามใช้ localStorage ฝั่ง frontend (ใช้ React Context)
+- ห้าม commit secret/`.env` ลง git — ใส่ `.env.example` แทน
+- ทุกครั้งที่ทำ step เสร็จ → อัปเดต `progress.md`
+- ทำงานเป็น step เล็ก ๆ commit บ่อย ๆ พร้อม message ที่สื่อความหมาย
+- ถ้าเจอข้อมูลกำกวมหรือ schema ไม่ชัด → ถามก่อน อย่าเดาแล้วเขียนยาว
+
+────────────────────────────────────────────────────────────────────────────
+1) เข้าใจจุดประสงค์ของโปรเจค (อ่านให้ครบก่อนเริ่ม)
+────────────────────────────────────────────────────────────────────────────
+SNK MES Dashboard = Manufacturing Execution System สำหรับโรงงานเซรามิค (สุขภัณฑ์) SNK.
+ผู้ใช้: Production Manager / MD / C-Level.
+เป้าหมายธุรกิจ (จาก phase-a.md): ลดต้นทุนจาก 2,300 → 1,700 บาท/Set ด้วยการลด
+Defect Loss ทุก stage ผ่าน 3 step: Defect Watchdog (รู้ทันที) → Defect Analysis
+(รู้สาเหตุจาก parameter) → Agentic AI (แนะนำ action, คนตัดสินใจ).
+
+สาย production 6 stage: slip-prep · glaze-prep · casting · drying · spraying · firing.
+หน้าเว็บหลัก: Dashboard overview + 6 Stage Detail + Alerts + Reports + Settings +
+ManualKeyIn + KPI detail pages (OEE/Takt/WIP/MTTR).
+
+Stack เป้าหมายของระบบ (จาก roadmap.md):
+React/Vite · FastAPI · TimescaleDB · Redis · EMQX · Keycloak · Kong · Node-RED ·
+Tailscale · Grafana.
+→ เฟสนี้โฟกัสแกนหลักก่อน: **FastAPI + PostgreSQL/TimescaleDB (+ Redis cache ถ้าจำเป็น)**
+ส่วน EMQX/Keycloak/Kong/Node-RED ให้ "ออกแบบเผื่อ" แต่ยังไม่ต้อง implement เต็ม.
+
+────────────────────────────────────────────────────────────────────────────
+2) ข้อมูลต้นทาง (Source JSON ที่อยู่ใน repo root) — ใช้สร้าง schema + seed
+────────────────────────────────────────────────────────────────────────────
+อ่านไฟล์จริงเพื่อยืนยัน schema ก่อนเขียน model เสมอ (อย่าเชื่อสรุปนี้อย่างเดียว):
+
+(a) casters.json — array 148 records (master ช่างหล่อ)
+    fields: id, employee_id, caster_id, name, factories[]  (เช่น ["SNK1","SNK2"])
+
+(b) gi_inspectors.json — array 24 records (master ผู้ตรวจ GI)
+    fields: id, employee_id, gi_id, name, factories[]
+
+(c) slip_prop_standards.json — object { slip_prop_standards: { meta, spec_history[] } }
+    spec_history = สเปก min/max ของ parameter รายช่วงเวลา (versioned by effective_date, line)
+
+(d) body_properties_SNK_2026.json — object { slip_prop: { meta, spec_control[],
+    daily_records[], chart_data_vc[], chart_data_hpc[], latest_daily_report, calendar } }
+    spec_control[] ตัวอย่าง:
+    { effective_date, line, conc{min,max}, v0{min,max}, v30{min,max},
+      yield_value{min,max}, thixo{min,max}, casting_rate{min,max} }
+
+(e) slip_prop_records.json — object { slip_prop: { daily_records[732], latest_daily_report } }
+    daily_records[] = timeseries รายวันของ Body Slip ต่อ line/tank:
+    { date, line_no, tank_no, type("Conv"/"HPC"), conc_g200ml, temp_c,
+      v0_sec100ml, v30_sec100ml, yield_value, f0, f5, thixo_f0_f5, casting_rate_mm20min }
+    (ค่าจำนวนมากเป็น null = ยังไม่ได้บันทึก ต้องรองรับ nullable)
+
+(f) qrcode_snk.json — **ไฟล์ใหญ่ ~60MB** object { SNK1:{metadata,records}, SNK2:{...} }
+    นี่คือ "หัวใจ" ของ Defect Watchdog — scan รายชิ้น (piece-level):
+    SNK1 ~122,353 records, SNK2 ~2,408 records.
+    record fields: "QR Code","Export Name","Create Update"(datetime),"Material",
+    "Model","Caster ID","Caster Name","GI ID","GI Name","Type","Result Work"
+    ("Good"/...),"Result"("Perfect"/...),"Defect","Klin Key"("TK1"...),"ZGI"
+    ⚠️ หมายเหตุความสัมพันธ์ (ยืนยันกับข้อมูลจริง): ในไฟล์ qrcode "Caster Name" ดู
+    เหมือนเก็บค่าเป็น employee_id (เช่น "000082") และ "Caster ID" = caster_id ภายในโรงงาน
+    (เช่น "2846"); GI ก็ pattern เดียวกัน. ให้ map FK ให้ถูก: qrcode."Caster Name"
+    → casters.employee_id, qrcode."GI Name" → gi_inspectors.employee_id
+    (ตรวจสอบ % match ก่อน แล้วรายงานตัวที่ join ไม่ติด).
+    ⚠️ ไฟล์นี้ใหญ่ ห้าม load ทั้งก้อนเข้า memory ตอน seed — ใช้ streaming parser
+    (เช่น ijson) หรือแตกเป็น batch insert.
+
+────────────────────────────────────────────────────────────────────────────
+3) งานที่ต้องทำ (Deliverables)
+────────────────────────────────────────────────────────────────────────────
+สร้างโฟลเดอร์ backend แยกชัดเจน (เสนอ: `server/` ที่ repo root) อย่ายุ่งกับ `src/`
+ของ frontend เกินจำเป็น.
+
+3.1 DATABASE
+- เลือก PostgreSQL + ส่วนขยาย TimescaleDB (ตาม roadmap). ถ้า TimescaleDB ติดตั้ง
+  ยากในเครื่อง dev ให้เริ่มที่ PostgreSQL ล้วนก่อน แล้วทำ migration เปิด hypertable
+  ทีหลัง — แจ้งทางเลือกให้ชัด.
+- ออกแบบ schema (เสนอแนวทาง ปรับได้):
+    * dim_caster (จาก casters.json)
+    * dim_gi_inspector (จาก gi_inspectors.json)
+    * dim_factory (SNK1/SNK2)
+    * dim_model / dim_material (normalize จาก qrcode ถ้าคุ้ม)
+    * fact_qr_scan (จาก qrcode records — ตารางใหญ่, ทำ hypertable บน "Create Update",
+      index: factory, model, caster_id, gi_id, defect, result, time)
+    * slip_daily_record (จาก slip_prop_records daily_records — timeseries)
+    * slip_spec_control / slip_spec_history (spec min/max แบบ versioned)
+    * (เผื่ออนาคต) alert, alert_rule/threshold, ai_suggestion, decision_log
+- เขียน migration ด้วย Alembic (versioned, reversible).
+- เขียน seed/ETL script ที่ idempotent (รันซ้ำได้ไม่ซ้ำข้อมูล) โหลด JSON ทั้ง 6 ไฟล์
+  เข้า DB. รองรับไฟล์ใหญ่ด้วย streaming + batch. สรุปจำนวน row ที่ insert และ
+  row ที่ join FK ไม่ติด.
+- เขียน data quality report สั้น ๆ (null counts, FK match %, date range).
+
+3.2 BACKEND API (FastAPI)
+- FastAPI + SQLAlchemy 2.x + Pydantic v2 + Alembic + uvicorn/gunicorn.
+- โครงสร้าง: app/(main, api/routers, models, schemas, crud, db, core/config), tests/.
+- Config ผ่าน environment (.env) — ห้าม hardcode. มี `.env.example`.
+- CORS อนุญาต origin ของ Vite dev (http://localhost:5173) และ prod domain.
+- /health และ /docs (OpenAPI) ต้องใช้งานได้.
+- **ออกแบบ endpoint ให้ map กับ exports ของ mock.js โดยตรง** (สำคัญที่สุด เพื่อ swap ได้ลื่น):
+  mock.js export: pipeline, overview{oee,takt,wip,mttr}, parameterDefect,
+  notifications, yield_, metrics, stageParams.
+  เสนอ endpoints (ปรับชื่อให้สวยได้ แต่ให้ payload ตรงรูปที่ component ต้องการ):
+    GET /api/pipeline                         → 6 stage cards + status
+    GET /api/overview                         → oee, takt, wip, mttr
+    GET /api/parameter-defect?stage=&defect=&param=&view=&from=&to=
+                                              → timeseries param + defect bar + UCL/LCL
+    GET /api/stages/{stageId}/params          → stageParams สำหรับ StageDetail
+    GET /api/yield?type=clay|firing           → segments (Good/Repair/Scrap) + target
+    GET /api/metrics                          → slip in / WH in ฯลฯ
+    GET /api/notifications                    → alert list
+    GET /api/alerts , PATCH /api/alerts/{id}  → list + resolve
+    GET /api/casters , GET /api/gi-inspectors → master data
+    GET /api/qr-scans?...&page=&size=         → query piece-level (pagination!)
+    GET /api/defects/summary?from=&to=&factory=&stage=
+                                              → aggregate defect rate (Pareto, by model/caster)
+  * ทุก endpoint ที่คืน list ใหญ่ ต้อง pagination + filter + sort.
+  * Aggregate/summary ควรทำที่ SQL ไม่ดึง raw มา loop ใน Python.
+  * ใส่ response model (Pydantic) ทุกตัว + ตัวอย่างใน OpenAPI.
+
+3.3 systemd `.service` (รันเป็น server จริงบน Linux)
+- สร้างไฟล์ใต้ `deploy/systemd/`:
+    * `snk-mes-api.service` — รัน gunicorn+uvicorn workers (FastAPI), Restart=always,
+      EnvironmentFile=/etc/snk-mes/api.env, User/Group ไม่ใช่ root, WorkingDirectory,
+      After=network.target postgresql.service.
+    * (ถ้าใช้) `snk-mes-worker.service` — เผื่อ background job (ETL/alert eval).
+- เขียน `deploy/README.md` วิธี install: คัดลอก unit ไป /etc/systemd/system/,
+  `systemctl daemon-reload`, `enable --now`, ดู `journalctl -u snk-mes-api -f`.
+- ใส่ `deploy/nginx.conf.example` (reverse proxy /api → :8000, เสิร์ฟ static build
+  ของ frontend ที่ `dist/`) — เป็นทางเลือก แต่แนะนำ.
+- ทางเลือก dev: `docker-compose.yml` (postgres/timescaledb + redis + api) ให้รันง่าย
+  ในเครื่อง แล้วค่อย map ไป systemd บน prod.
+
+3.4 เชื่อม FRONTEND กับ API (swap mock → real, ปลอดภัย)
+- สร้าง data layer ใหม่ฝั่ง frontend: `src/services/api.js` (fetch wrapper อ่าน
+  `import.meta.env.VITE_API_BASE_URL`) + hooks ใน `src/hooks/` (เช่น usePipeline,
+  useOverview, ...) คืนรูปข้อมูล "เหมือน mock.js เป๊ะ".
+- ใช้ feature flag: ถ้า `VITE_USE_API=false` หรือ fetch ล้มเหลว → fallback ไป mock.js
+  เดิม (กัน UI พังตอน backend ยังไม่พร้อม). ทำ swap ทีละหน้า เริ่มจาก Dashboard.
+- ห้ามแก้รูป props ของ component ที่มีอยู่ — ให้ hook แปลง payload ให้ตรง props เดิม.
+- ใส่ loading / error / empty state ที่เรียบง่าย (ใช้ CSS variables ตาม theme).
+- เพิ่ม proxy ใน `vite.config.js` ('/api' → backend) สำหรับ dev เพื่อเลี่ยงปัญหา CORS.
+
+────────────────────────────────────────────────────────────────────────────
+4) แก้ไข / แนะนำจุดที่ขาดตกบกพร่อง (คาดหวังให้ทำ + เสนอเพิ่ม)
+────────────────────────────────────────────────────────────────────────────
+ตรวจและรายงาน gap เหล่านี้ พร้อมเสนอ/ลงมือแก้ตามเหมาะสม (สิ่งใหญ่ขออนุมัติก่อน):
+- ความสอดคล้องของ schema ระหว่าง mock.js กับข้อมูลจริง (field ไหนใน mock ไม่มีแหล่งข้อมูลจริง
+  รองรับ → ทำเครื่องหมาย "derived" หรือ "needs sensor" ตาม phase-a.md).
+- Defect taxonomy: field "Defect" ใน qrcode เป็น free text หรือไม่ → เสนอ normalize เป็น
+  dim_defect_type + map กับ defect ใน CLAUDE.md (pinhole, crack, discoloration,
+  deformation, grain-size, surface, color).
+- Parameter→Defect mapping (ตาราง §10 ใน CLAUDE.md) ใช้ขับ correlation/insight — ทำ
+  view หรือ endpoint รองรับ.
+- Timezone & datetime: "Create Update" / date เป็น string รูปแบบต่างกัน — normalize เป็น
+  timestamptz (Asia/Bangkok) ให้ชัด.
+- Indexing/performance บน fact_qr_scan (125k+ rows, จะโตเรื่อย ๆ).
+- ความปลอดภัยขั้นต้น: เผื่อช่อง auth (Keycloak ภายหลัง) — ตอนนี้อย่างน้อยกัน CORS,
+  rate-limit endpoint หนัก, validate query param.
+- Migration/seed ต้อง reproducible; เขียน `make`/`scripts/` ให้รันครบจบในคำสั่งเดียว.
+- เสนอเพิ่มได้ตามดุลพินิจ (ถ้าคุ้มค่าและไม่ scope creep): caching summary ด้วย Redis,
+  endpoint สำหรับ ManualKeyIn (POST slip record), seed-from-latest สำหรับ demo,
+  data validation rule (ค่าหลุด spec → flag), pytest + sample data ขนาดเล็ก.
+
+────────────────────────────────────────────────────────────────────────────
+5) ลำดับการทำงาน (ทำเป็น step, commit ทีละ step, อัปเดต progress.md)
+────────────────────────────────────────────────────────────────────────────
+S1. สำรวจ repo + อ่าน CLAUDE.md/roadmap/phase-a/architecture + inspect JSON จริง →
+    สรุป schema ที่จะใช้ (เสนอ ER diagram สั้น ๆ) ให้ผมรีวิวก่อนลงมือใหญ่.
+S2. scaffold `server/` (FastAPI + SQLAlchemy + Alembic) + docker-compose dev DB +
+    /health ผ่าน.
+S3. Alembic migration (สร้างตารางทั้งหมด) + ETL/seed idempotent + data quality report.
+S4. Implement endpoints ชุดแรกที่ map กับ Dashboard (pipeline, overview, notifications,
+    yield, metrics) + ทดสอบด้วย curl/pytest.
+S5. Frontend data layer + hooks + feature flag + swap Dashboard เป็น API (mock fallback).
+S6. Endpoints ที่เหลือ (parameter-defect, stage params, qr-scans, defects/summary,
+    alerts resolve) + swap หน้า StageDetail/Alerts/Reports.
+S7. systemd units + deploy/README + nginx example + ทดสอบรัน `systemctl` (หรือจำลอง).
+S8. ตรวจรอบสุดท้าย: lint, pytest, build frontend, สรุป gap ที่เหลือ + อัปเดต progress.md.
+
+────────────────────────────────────────────────────────────────────────────
+6) เกณฑ์ผ่านงาน (Acceptance Criteria)
+────────────────────────────────────────────────────────────────────────────
+[ ] `docker compose up` (หรือ DB ใน systemd) + seed → ข้อมูลจาก JSON ทั้ง 6 ไฟล์เข้า DB ครบ
+    และ report match % ของ FK ออกมา.
+[ ] FastAPI ขึ้น, `/health` = ok, `/docs` ใช้ได้, ทุก endpoint คืน payload ตรงรูปที่
+    component frontend ต้องการ.
+[ ] frontend ตั้ง `VITE_USE_API=true` แล้ว Dashboard + อย่างน้อย 1 Stage Detail ดึงข้อมูล
+    จาก API จริงได้ โดย UI ไม่พัง และยัง fallback เป็น mock ได้เมื่อปิด flag.
+[ ] systemd `.service` ติดตั้งแล้ว `systemctl enable --now` รันได้, restart อัตโนมัติ,
+    log ดูผ่าน journalctl; มี deploy/README ชัดเจน.
+[ ] ไม่มี secret ใน git, มี `.env.example`, `npm run build` และ `pytest` ผ่าน.
+[ ] อัปเดต `progress.md` + เขียนสรุป gap/ข้อเสนอที่ยังค้าง.
+
+────────────────────────────────────────────────────────────────────────────
+7) คำสั่งเริ่มต้นที่อยากให้ทำทันที
+────────────────────────────────────────────────────────────────────────────
+เริ่มที่ S1: อ่าน CLAUDE.md, roadmap.md, phase-a.md, architecture.md, progress.md และ
+inspect โครงสร้างจริงของ JSON ทั้ง 6 ไฟล์ (โดยเฉพาะ qrcode_snk.json ด้วย streaming)
+แล้วเสนอ (1) แผน schema/ER, (2) รายการ endpoint→mock mapping, (3) ทางเลือก
+PostgreSQL vs TimescaleDB ในเครื่อง dev. หยุดให้ผมรีวิวก่อนจะลงมือสร้างของจริง.
+================================================================================

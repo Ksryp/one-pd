@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 import psycopg2
 from psycopg2.extras import execute_values
 
-DATA_DIR = Path(__file__).parent.parent.parent
+DATA_DIR = Path(__file__).parent.parent.parent / "data"
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from app.core.config import settings
 

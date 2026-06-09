@@ -1,3 +1,4 @@
+import React from 'react'
 import {
   ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ReferenceLine, ResponsiveContainer,
@@ -9,13 +10,19 @@ const PARAM_COLOR = {
   viscosity_v0:  '#4F8EE8',
   viscosity_v30: '#7C5CBF',
   temperature:   '#F59E0B',
-  moisture:      '#10B981',
+  concentration: '#10B981',
+  casting_rate:  '#EF4444',
+  yield_value:   '#06B6D4',
+  thixo:         '#F97316',
 }
 const PARAM_LABEL = {
   viscosity_v0:  'Viscosity V0',
   viscosity_v30: 'Viscosity V30',
   temperature:   'Temperature',
-  moisture:      'Moisture %',
+  concentration: 'Concentration',
+  casting_rate:  'Casting Rate',
+  yield_value:   'Yield',
+  thixo:         'Thixotropy',
 }
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -86,15 +93,20 @@ export default function DualAxisChart() {
           <Legend verticalAlign="top" height={36} iconType="circle"
             wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
 
-          {/* UCL/LCL reference lines for first selected param */}
-          {selectedParameter.includes('viscosity_v0') && ucl.viscosity_v0 && (
-            <>
-              <ReferenceLine yAxisId="param" y={ucl.viscosity_v0} stroke="#DC2626" strokeDasharray="4 4" strokeWidth={1.5}
-                label={{ value: 'UCL', position: 'right', fontSize: 9, fill: '#DC2626' }} />
-              <ReferenceLine yAxisId="param" y={lcl.viscosity_v0} stroke="#D97706" strokeDasharray="4 4" strokeWidth={1.5}
-                label={{ value: 'LCL', position: 'right', fontSize: 9, fill: '#D97706' }} />
-            </>
-          )}
+          {/* UCL/LCL only when exactly 1 parameter is selected */}
+          {(selectedParameter || []).length === 1 && (() => {
+            const pk = selectedParameter[0]
+            return ucl[pk] != null ? (
+              <React.Fragment>
+                <ReferenceLine yAxisId="param" y={ucl[pk]} stroke="#DC2626" strokeDasharray="4 4" strokeWidth={1.5}
+                  label={{ value: 'UCL', position: 'right', fontSize: 9, fill: '#DC2626' }} />
+                {lcl[pk] != null && (
+                  <ReferenceLine yAxisId="param" y={lcl[pk]} stroke="#D97706" strokeDasharray="4 4" strokeWidth={1.5}
+                    label={{ value: 'LCL', position: 'right', fontSize: 9, fill: '#D97706' }} />
+                )}
+              </React.Fragment>
+            ) : null
+          })()}
 
           {/* Defect bar (right Y-axis) */}
           <Bar yAxisId="defect" dataKey="defect" name="Defect Count"
@@ -111,7 +123,7 @@ export default function DualAxisChart() {
               stroke={PARAM_COLOR[pk] ?? '#4F8EE8'}
               strokeWidth={2}
               dot={false}
-              connectNulls={false}
+              connectNulls={true}
               activeDot={{ r: 5, fill: PARAM_COLOR[pk] ?? '#4F8EE8' }}
             />
           ))}

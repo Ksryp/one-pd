@@ -15,7 +15,7 @@ function LastUpdated({ date }) {
 }
 
 export default function ParameterDefectCard() {
-  const { lastUpdated, loading } = useParameterDefect()
+  const { lastUpdated, loading, refresh } = useParameterDefect()
 
   return (
     <section className="mb-6">
@@ -28,6 +28,21 @@ export default function ParameterDefectCard() {
             <span className="text-[10px] text-[var(--accent)] animate-pulse">Refreshing…</span>
           )}
           <LastUpdated date={lastUpdated} />
+          <button
+            onClick={refresh}
+            disabled={loading}
+            title="Refresh now"
+            className="flex items-center justify-center w-6 h-6 rounded-md border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"
+              className={loading ? 'animate-spin' : ''}>
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+              <path d="M21 3v5h-5"/>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+              <path d="M8 16H3v5"/>
+            </svg>
+          </button>
         </div>
       </div>
 

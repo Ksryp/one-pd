@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNK MES - Cost Estimation Questionnaire</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0D1117 0%, #161B22 100%);
+            color: #E6EDF3;
+            padding: 30px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #4F8EE8, #1E6FCC);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #8B949E;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #6B7280;
+            font-size: 12px;
+        }
+
+        .progress-bar {
+            background: #30363D;
+            height: 4px;
+            border-radius: 2px;
+            margin: 30px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #4F8EE8, #1E6FCC);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .form-section {
+            background: #161B22;
+            border: 2px solid #30363D;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .form-section h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #4F8EE8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-section h2::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            background: linear-gradient(135deg, #4F8EE8, #1E6FCC);
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .question-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #E6EDF3;
+        }
+
+        .question-hint {
+            font-size: 12px;
+            color: #8B949E;
+            margin-bottom: 8px;
+            display: block;
+            font-weight: 400;
+        }
+
+        .radio-group, .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .radio-option, .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #0D1117;
+            border: 1px solid #30363D;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .radio-option:hover, .checkbox-option:hover {
+            background: rgba(79, 142, 232, 0.1);
+            border-color: #4F8EE8;
+        }
+
+        .radio-option input, .checkbox-option input {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            accent-color: #4F8EE8;
+        }
+
+        .option-text {
+            flex: 1;
+        }
+
+        .option-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: #E6EDF3;
+        }
+
+        .option-desc {
+            font-size: 11px;
+            color: #8B949E;
+            margin-top: 2px;
+        }
+
+        input[type="number"], input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            background: #0D1117;
+            border: 1px solid #30363D;
+            border-radius: 6px;
+            color: #E6EDF3;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus, input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #4F8EE8;
+            box-shadow: 0 0 10px rgba(79, 142, 232, 0.2);
+        }
+
+        .slider-container {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #30363D;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4F8EE8;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(79, 142, 232, 0.5);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4F8EE8;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(79, 142, 232, 0.5);
+        }
+
+        .slider-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4F8EE8;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #4F8EE8, #1E6FCC);
+            color: white;
+        }
+
+        .btn-submit:hover {
+            box-shadow: 0 0 20px rgba(79, 142, 232, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-reset {
+            background: #30363D;
+            color: #E6EDF3;
+        }
+
+        .btn-reset:hover {
+            background: #404854;
+        }
+
+        .result-section {
+            display: none;
+            background: linear-gradient(135deg, rgba(129, 199, 132, 0.1), rgba(81, 225, 167, 0.05));
+            border: 2px solid #81C784;
+            border-radius: 12px;
+            padding: 40px;
+            margin-top: 40px;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #81C784;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .cost-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .cost-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #81C784;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .cost-card-label {
+            font-size: 12px;
+            color: #8B949E;
+            margin-bottom: 8px;
+        }
+
+        .cost-card-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #81C784;
+        }
+
+        .cost-details {
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 3px solid #4F8EE8;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #8B949E;
+        }
+
+        .detail-value {
+            color: #4F8EE8;
+            font-weight: 600;
+        }
+
+        .recommendations {
+            background: rgba(79, 142, 232, 0.1);
+            border-left: 3px solid #4F8EE8;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .recommendations h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4F8EE8;
+            margin-bottom: 12px;
+        }
+
+        .recommendation-item {
+            font-size: 12px;
+            color: #8B949E;
+            margin-bottom: 8px;
+            padding-left: 15px;
+            position: relative;
+        }
+
+        .recommendation-item::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #81C784;
+            font-weight: 700;
+        }
+
+        .timeline {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+
+        .timeline h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #E6EDF3;
+            margin-bottom: 15px;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+
+        .timeline-period {
+            font-size: 12px;
+            font-weight: 600;
+            color: #4F8EE8;
+            min-width: 80px;
+        }
+
+        .timeline-content {
+            font-size: 12px;
+            color: #8B949E;
+        }
+
+        .info-box {
+            background: rgba(79, 142, 232, 0.1);
+            border-left: 3px solid #4F8EE8;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .cost-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .slider-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .slider-value {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>SNK MES Dashboard</h1>
+            <p>ตั้งคำถามเพื่อคิดค่าใช้จ่ายจริง ๆ</p>
+            <div class="subtitle">ตอบคำถามนี้ให้ครบถ้วน จะได้ประมาณการค่าใช้จ่าย Cloud ที่สมจริง</div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <form id="estimationForm">
+            <!-- Section 1: User Information -->
+            <div class="form-section">
+                <h2>👥 จำนวนผู้ใช้และการใช้งาน</h2>
+
+                <div class="form-group">
+                    <label class="question-label">1. คาดว่าจะมีผู้ใช้งาน Dashboard นี้กี่คน ในระยะแรก (3-6 เดือน)?</label>
+                    <div class="slider-container">
+                        <input type="range" id="initialUsers" min="5" max="1000" value="30" oninput="updateProgress()">
+                        <span class="slider-value" id="initialUsersVal">30 คน</span>
+                    </div>
+                    <span class="question-hint">• Production Manager ทั่วโรงงาน</span>
+                    <span class="question-hint">• C-Level executives</span>
+                    <span class="question-hint">• Sales team (ดูข้อมูลจากบ้าน)</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="question-label">2. คาดว่าจะมีผู้ใช้เพิ่มขึ้นเป็นกี่คนใน 1 ปี?</label>
+                    <div class="slider-container">
+                        <input type="range" id="yearUsers" min="10" max="5000" value="100" oninput="updateProgress()">
+                        <span class="slider-value" id="yearUsersVal">100 คน</span>
+                    </div>
+                    <span class="question-hint">เมื่อขยายไปสาขาอื่น หรือผู้ใช้ใหม่เพิ่มเติม</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="question-label">3. โดยเฉลี่ยแล้ว ผู้ใช้จะเข้ามาดู Dashboard กี่ครั้งต่อวัน?</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="dailyVisits" value="once" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">1 ครั้ง</div>
+                                <div class="option-desc">ดูหนึ่งครั้งต่อวัน (เช้า)</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="dailyVisits" value="twice" checked onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">2-3 ครั้ง</div>
+                                <div class="option-desc">เช้า เที่ยง เย็น</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="dailyVisits" value="frequent" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">5+ ครั้ง</div>
+                                <div class="option-desc">ติดตามผลสนใจลักษณะการผลิต</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="dailyVisits" value="realtime" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">Real-time (ต้อง Auto-refresh)</div>
+                                <div class="option-desc">ต้องดูข้อมูลตรงเวลา ทุกสักครู่</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="question-label">4. ระดับ Uptime ที่ต้องการ (Online 24 ชั่วโมง)?</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="uptime" value="95" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">95% (ลงได้ ~1 ชั่วโมง/สัปดาห์)</div>
+                                <div class="option-desc">ปรกติ ไม่ตระหนักเพิ่มเติม</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="uptime" value="99" checked onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">99% (ลงได้ ~7 นาที/สัปดาห์)</div>
+                                <div class="option-desc">ปกติสำหรับระบบ Production</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="uptime" value="9992" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">99.9% (ลงได้ ~40 วินาที/สัปดาห์)</div>
+                                <div class="option-desc">ต้อง High Availability (ค่าสูง)</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Data Information -->
+            <div class="form-section">
+                <h2>📊 ข้อมูลและ Database</h2>
+
+                <div class="form-group">
+                    <label class="question-label">5. ปัจจุบัน Database มีข้อมูลกี่ GB?</label>
+                    <input type="number" id="currentDbSize" value="10" min="1" max="1000" onchange="updateProgress()">
+                    <span class="question-hint">ประมาณการ: 6 เดือนข้อมูล / 10-50 GB ตามอัตราการผลิต</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="question-label">6. ข้อมูลจะเพิ่มขึ้นกี่ % ต่อเดือน?</label>
+                    <div class="slider-container">
+                        <input type="range" id="dbGrowth" min="1" max="50" value="5" oninput="updateProgress()">
+                        <span class="slider-value" id="dbGrowthVal">5% / เดือน</span>
+                    </div>
+                    <span class="question-hint">ปกติ 3-10% ตามการผลิต</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="question-label">7. ต้องเก็บข้อมูลกี่ปี (Retention Period)?</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="retention" value="1" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">1 ปี</div>
+                                <div class="option-desc">ลบข้อมูลเก่าเป็นระยะ</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="retention" value="3" checked onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">3 ปี</div>
+                                <div class="option-desc">ใช้วิเคราะห์ Trends ระยะยาว</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="retention" value="7" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">7 ปี</div>
+                                <div class="option-desc">ตามกฎหมาย Compliance</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Features & Infrastructure -->
+            <div class="form-section">
+                <h2>⚙️ Features และ Infrastructure</h2>
+
+                <div class="form-group">
+                    <label class="question-label">8. Features ที่ต้องใช้ (เลือกได้หลายข้อ)</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="features" value="alerts" checked onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">📢 Alerts & Notifications</div>
+                                <div class="option-desc">แจ้งเตือน Email/SMS/Telegram</div>
+                            </div>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="features" value="reports" checked onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">📋 Reports & Export</div>
+                                <div class="option-desc">ส่งออก PDF/Excel รายวัน</div>
+                            </div>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="features" value="analytics" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">📊 Advanced Analytics</div>
+                                <div class="option-desc">Machine Learning / Predictions</div>
+                            </div>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="features" value="mobile" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">📱 Mobile App</div>
+                                <div class="option-desc">iOS / Android Native App</div>
+                            </div>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="features" value="api" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">🔗 Public API</div>
+                                <div class="option-desc">ให้ vendor อื่น integrate ได้</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="question-label">9. ต้องมี Backup/Disaster Recovery?</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="backup" value="minimal" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">Minimal (ไม่ต้อง)</div>
+                                <div class="option-desc">ไม่ต้อง, สำรองที่โรงงาน</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="backup" value="standard" checked onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">Standard</div>
+                                <div class="option-desc">Backup ประจำวัน ที่ Cloud</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="backup" value="premium" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">Premium (Redundant)</div>
+                                <div class="option-desc">Multi-region backup + failover auto</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="question-label">10. ต้อง Support/SLA ระดับไหน?</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="support" value="none" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">ไม่ต้อง (DIY)</div>
+                                <div class="option-desc">จัดการเอง, ไม่มี Support</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="support" value="basic" checked onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">Basic (Community)</div>
+                                <div class="option-desc">Chat support 8-5 บ้าน</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="support" value="professional" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">Professional 24/7</div>
+                                <div class="option-desc">Dedicated team, SLA รับประกัน</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Budget -->
+            <div class="form-section">
+                <h2>💰 งบประมาณและขอบเขต</h2>
+
+                <div class="form-group">
+                    <label class="question-label">11. เป้าหมายงบประมาณต่อเดือน?</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="budget" value="minimal" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">Minimal ($0-20/เดือน)</div>
+                                <div class="option-desc">ใช้ free tier + ค่าเดือนแบบต่ำสุด</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="budget" value="standard" checked onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">Standard ($20-50/เดือน)</div>
+                                <div class="option-desc">ปรกติสำหรับ SME</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="budget" value="premium" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">Premium ($50-150/เดือน)</div>
+                                <div class="option-desc">ต้องการ Quality/Support ดี</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="budget" value="enterprise" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">Enterprise ($150+/เดือน)</div>
+                                <div class="option-desc">ไม่มีข้อจำกัด</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="question-label">12. ต้องเตรียมเงินทั้งปีให้เท่านี้หรือ?</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="payment" value="monthly" checked onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">จ่ายเป็นรายเดือน</div>
+                                <div class="option-desc">Flexible, ปรับได้ทุกเดือน</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="payment" value="annual" onchange="updateProgress()">
+                            <div class="option-text">
+                                <div class="option-title">จ่ายตั้งแต่ต้นปี (ลดได้ 20%)</div>
+                                <div class="option-desc">Reserved instances จ่ายล่วงหน้า</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="button-group">
+                <button type="button" class="btn-reset" onclick="resetForm()">🔄 Reset</button>
+                <button type="button" class="btn-submit" onclick="calculateCost()">💰 คิดค่าใช้จ่าย</button>
+            </div>
+        </form>
+
+        <!-- Results -->
+        <div class="result-section" id="resultSection">
+            <div class="result-title">📊 ผลการประมาณการค่าใช้จ่ายของคุณ</div>
+
+            <div class="cost-summary">
+                <div class="cost-card">
+                    <div class="cost-card-label">ค่า Cloud ต่อเดือน</div>
+                    <div class="cost-card-value" id="monthlyCost">$XX</div>
+                </div>
+                <div class="cost-card">
+                    <div class="cost-card-label">ค่า Cloud ต่อปี</div>
+                    <div class="cost-card-value" id="yearlyCost">$XX</div>
+                </div>
+                <div class="cost-card">
+                    <div class="cost-card-label">ทั้งหมด 3 ปี</div>
+                    <div class="cost-card-value" id="threeyearsCost">$XX</div>
+                </div>
+            </div>
+
+            <div class="cost-details" id="costDetails">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <div class="recommendations" id="recommendations">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <div class="timeline" id="timeline">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <div class="info-box">
+                <strong>💡 หมายเหตุ:</strong><br>
+                • ราคาข้างต้นเป็นประมาณการโดยประมาณ อาจมีการเปลี่ยนแปลง<br>
+                • ไม่รวมค่า On-premise Database server hardware<br>
+                • ไม่รวมค่า VPN hardware ที่โรงงาน (ใช้เป็นงบปกติ)<br>
+                • ไม่รวมค่า Development / ตั้งค่าครั้งแรก<br>
+                • ราคา AWS ตามสกุลเงิน USD (ส่วนใหญ่)
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateProgress() {
+            const inputs = document.querySelectorAll('input[type="number"], input[type="range"], input[type="radio"], input[type="checkbox"]');
+            let filled = 0;
+            inputs.forEach(input => {
+                if (input.type === 'checkbox') {
+                    if (input.checked) filled++;
+                } else if (input.value) {
+                    filled++;
+                }
+            });
+            const progress = (filled / inputs.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+
+            // Update slider values display
+            const initialUsers = document.getElementById('initialUsers').value;
+            document.getElementById('initialUsersVal').textContent = initialUsers + ' คน';
+
+            const yearUsers = document.getElementById('yearUsers').value;
+            document.getElementById('yearUsersVal').textContent = yearUsers + ' คน';
+
+            const dbGrowth = document.getElementById('dbGrowth').value;
+            document.getElementById('dbGrowthVal').textContent = dbGrowth + '% / เดือน';
+        }
+
+        function resetForm() {
+            document.getElementById('estimationForm').reset();
+            document.getElementById('resultSection').classList.remove('show');
+            document.getElementById('initialUsersVal').textContent = '30 คน';
+            document.getElementById('yearUsersVal').textContent = '100 คน';
+            document.getElementById('dbGrowthVal').textContent = '5% / เดือน';
+            updateProgress();
+        }
+
+        function calculateCost() {
+            // Get values
+            const initialUsers = parseInt(document.getElementById('initialUsers').value);
+            const yearUsers = parseInt(document.getElementById('yearUsers').value);
+            const dailyVisits = document.querySelector('input[name="dailyVisits"]:checked').value;
+            const uptime = document.querySelector('input[name="uptime"]:checked').value;
+            const currentDbSize = parseInt(document.getElementById('currentDbSize').value);
+            const dbGrowth = parseFloat(document.getElementById('dbGrowth').value);
+            const retention = parseInt(document.querySelector('input[name="retention"]:checked').value);
+            const features = Array.from(document.querySelectorAll('input[name="features"]:checked')).map(x => x.value);
+            const backup = document.querySelector('input[name="backup"]:checked').value;
+            const support = document.querySelector('input[name="support"]:checked').value;
+            const budget = document.querySelector('input[name="budget"]:checked').value;
+            const payment = document.querySelector('input[name="payment"]:checked').value;
+
+            // Base costs
+            let ec2Cost = 20; // Basic t3.small
+            let cdnCost = 5;
+            let s3Cost = 2;
+            let transferCost = 5;
+            let vpnCost = 5;
+            let monitorCost = 4;
+            let backupCost = 3;
+            let supportCost = 0;
+
+            // Adjust EC2 based on users
+            if (yearUsers > 500) ec2Cost = 35;
+            if (yearUsers > 2000) ec2Cost = 60;
+            if (yearUsers > 5000) ec2Cost = 120;
+
+            // Adjust CDN based on visits
+            if (dailyVisits === 'frequent') cdnCost = 10;
+            if (dailyVisits === 'realtime') cdnCost = 15;
+
+            // Adjust uptime
+            if (uptime === '9992') {
+                ec2Cost *= 1.5;
+                monitorCost += 10;
+                supportCost += 50;
+            }
+
+            // Database growth
+            const months = 12;
+            const projectedDbSize = currentDbSize * Math.pow(1 + dbGrowth/100, months);
+            const avgDbSize = (currentDbSize + projectedDbSize) / 2;
+            backupCost = avgDbSize * 0.05; // $0.05 per GB for backup
+
+            // Features
+            if (features.includes('analytics')) ec2Cost += 20;
+            if (features.includes('mobile')) supportCost += 30;
+            if (features.includes('api')) supportCost += 10;
+
+            // Backup level
+            if (backup === 'premium') backupCost *= 2;
+
+            // Support
+            if (support === 'professional') supportCost += 100;
+
+            // Calculate subtotal
+            let subtotal = ec2Cost + cdnCost + s3Cost + transferCost + vpnCost + monitorCost + backupCost + supportCost;
+
+            // Apply discount if annual
+            if (payment === 'annual') {
+                subtotal *= 0.8; // 20% discount
+            }
+
+            const monthly = Math.round(subtotal * 100) / 100;
+            const yearly = Math.round(monthly * 12 * 100) / 100;
+            const threeyears = Math.round(yearly * 3 * 100) / 100;
+
+            // Display results
+            document.getElementById('monthlyCost').textContent = '$' + monthly.toFixed(2);
+            document.getElementById('yearlyCost').textContent = '$' + yearly.toFixed(2);
+            document.getElementById('threeyearsCost').textContent = '$' + threeyears.toFixed(2);
+
+            // Cost details
+            const detailsHtml = `
+                <div class="detail-item">
+                    <span class="detail-label">🖥️ EC2 Backend Server</span>
+                    <span class="detail-value">$${ec2Cost.toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">📡 CloudFront CDN</span>
+                    <span class="detail-value">$${cdnCost.toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">📦 S3 Storage</span>
+                    <span class="detail-value">$${s3Cost.toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">🌐 Data Transfer Out</span>
+                    <span class="detail-value">$${transferCost.toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">🔒 VPN Gateway</span>
+                    <span class="detail-value">$${vpnCost.toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">📊 CloudWatch Monitoring</span>
+                    <span class="detail-value">$${monitorCost.toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">💾 Database Backup</span>
+                    <span class="detail-value">$${backupCost.toFixed(2)}</span>
+                </div>
+                ${supportCost > 0 ? `<div class="detail-item">
+                    <span class="detail-label">👨‍💼 Support & Features</span>
+                    <span class="detail-value">$${supportCost.toFixed(2)}</span>
+                </div>` : ''}
+            `;
+            document.getElementById('costDetails').innerHTML = detailsHtml;
+
+            // Recommendations
+            const recommendationsHtml = `
+                <h3>💡 คำแนะนำสำหรับคุณ</h3>
+                ${yearUsers < 100 ? '<div class="recommendation-item">เริ่มด้วย AWS Free tier แล้วขึ้นเป็น Paid ทีหลัง</div>' : ''}
+                ${yearUsers > 1000 ? '<div class="recommendation-item">ลองใช้ Reserved Instances เพื่อประหยัด 20-30%</div>' : ''}
+                ${backup === 'minimal' ? '<div class="recommendation-item">ควรมี Standard Backup อย่างน้อย เพื่อความปลอดภัย</div>' : ''}
+                ${support === 'none' ? '<div class="recommendation-item">ถ้า Critical system ควรมี Basic Support อย่างน้อย</div>' : ''}
+                ${currentDbSize > 100 ? '<div class="recommendation-item">พิจารณา Archive เก่าข้อมูลเก่าไป S3 Glacier เพื่อประหยัด Storage</div>' : ''}
+                ${features.length === 0 ? '<div class="recommendation-item">เลือก Features เพิ่มเติม เช่น Alerts หรือ Reports</div>' : ''}
+            `;
+            document.getElementById('recommendations').innerHTML = recommendationsHtml;
+
+            // Timeline
+            const timelineHtml = `
+                <h3>📅 Timeline ข้อมูลประมาณการ</h3>
+                <div class="timeline-item">
+                    <div class="timeline-period">ปี 1 (เดือน 1-12)</div>
+                    <div class="timeline-content">
+                        <strong>ต้นทุน: $0 (Free tier) → $${monthly.toFixed(2)}/เดือน</strong><br>
+                        • เดือนแรก-สามใช้ Free tier<br>
+                        • เดือนที่ 4 เริ่มมี charges<br>
+                        • ปล้ายปี users ≈ ${yearUsers} คน<br>
+                        • ประมาณการ ปี 1: $${(monthly * 9).toFixed(2)} (3 เดือนแรก free)
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-period">ปี 2</div>
+                    <div class="timeline-content">
+                        <strong>ต้นทุน: $${yearly.toFixed(2)}</strong><br>
+                        • Costs จะเพิ่มขึ้นตามการเติบโต<br>
+                        • ลองใช้ Reserved Instances (ประหยัด 20%)<br>
+                        • Costs ทำให้ลดเหลือ ~$${(yearly * 0.8).toFixed(2)}/ปี
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-period">ปี 3+</div>
+                    <div class="timeline-content">
+                        <strong>ต้นทุน: $${yearly.toFixed(2)}/ปี (เข้าสถานะ stable)</strong><br>
+                        • Optimization จะทำให้ cost ลดลงหรือคงที่<br>
+                        • ROI: ประหยัด manual work ค่า > cloud cost หลายเท่า
+                    </div>
+                </div>
+            `;
+            document.getElementById('timeline').innerHTML = timelineHtml;
+
+            document.getElementById('resultSection').classList.add('show');
+            document.querySelector('html').scrollTop = document.getElementById('resultSection').offsetTop - 200;
+        }
+
+        // Initialize
+        updateProgress();
+    </script>
+</body>
+</html>

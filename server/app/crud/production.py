@@ -233,15 +233,60 @@ def get_machine_timeseries(tsdb_session: Session, hours: int = 24) -> list[dict]
 # ── Parameter-Defect Chart ─────────────────────────────────────────────────────
 
 _VALID_VIEWS = {'hour', 'day', 'week', 'month'}
-_VIEW_FMT = {'hour': 'HH24:MI', 'day': 'DD Mon', 'week': 'IYYY-IW', 'month': 'Mon YYYY'}
-_PARAM_COL = {
-    'viscosity_v0':  'ct_avg_cur',
-    'viscosity_v30': 'ct_mc_cur',
-    'temperature':   'stemp',
-    'moisture':      'volst',
+_VIEW_FMT = {'hour': 'DD Mon', 'day': 'DD Mon', 'week': 'IYYY-IW', 'month': 'Mon YYYY'}
+
+# Columns in slip_daily_record mapped to frontend parameter keys
+_SLIP_PARAM_COL = {
+    'viscosity_v0':  'v0_sec100ml',
+    'viscosity_v30': 'v30_sec100ml',
+    'temperature':   'temp_c',
+    'concentration': 'conc_g200ml',
+    'casting_rate':  'casting_rate_mm20min',
+    'yield_value':   'yield_value',
+    'thixo':         'thixo_f0_f5',
 }
-_UCL = {'viscosity_v0': 900, 'viscosity_v30': 900, 'temperature': 1280, 'moisture': 15}
-_LCL = {'viscosity_v0': 700, 'viscosity_v30': 700, 'temperature': 1180, 'moisture':  8}
+
+# spec column names in slip_spec_history keyed by parameter
+_SPEC_COLS = {
+    'viscosity_v0':  ('v0_min',      'v0_max'),
+    'viscosity_v30': ('v30_min',     'v30_max'),
+    'concentration': ('conc_min',    'conc_max'),
+    'yield_value':   ('yield_min',   'yield_max'),
+    'thixo':         ('thixo_min',   'thixo_max'),
+    'casting_rate':  ('casting_min', 'casting_max'),
+}
+
+
+def _get_slip_specs(pg_db: Session, params: list[str]) -> tuple[dict, dict]:
+    """Return (ucl, lcl) dicts from the most-recent slip_spec_history row."""
+    row = pg_db.execute(text("""
+        SELECT conc_min, conc_max, v0_min, v0_max, v30_min, v30_max,
+               yield_min, yield_max, thixo_min, thixo_max, casting_min, casting_max
+        FROM slip_spec_history
+        ORDER BY effective_date DESC
+        LIMIT 1
+    """)).fetchone()
+    if not row:
+        return {}, {}
+    col_idx = {
+        'conc_min': 0, 'conc_max': 1,
+        'v0_min':   2, 'v0_max':   3,
+        'v30_min':  4, 'v30_max':  5,
+        'yield_min':6, 'yield_max':7,
+        'thixo_min':8, 'thixo_max':9,
+        'casting_min':10,'casting_max':11,
+    }
+    lcl, ucl = {}, {}
+    for pp in params:
+        if pp in _SPEC_COLS:
+            mn_col, mx_col = _SPEC_COLS[pp]
+            v_min = row[col_idx[mn_col]]
+            v_max = row[col_idx[mx_col]]
+            if v_min is not None:
+                lcl[pp] = float(v_min)
+            if v_max is not None:
+                ucl[pp] = float(v_max)
+    return ucl, lcl
 
 
 def _defect_where(defect_code: str | None, model_names: list[str] | None, params: dict) -> str:
@@ -259,7 +304,6 @@ def _defect_where(defect_code: str | None, model_names: list[str] | None, params
 
 def get_defect_chart(
     pg_db: Session,
-    tsdb_db: Session,
     view: str,
     start_date: str,
     end_date: str,
@@ -267,8 +311,9 @@ def get_defect_chart(
     model_names: list[str] | None,
     parameter_list: list[str],
 ) -> dict:
-    view = view if view in _VALID_VIEWS else 'day'
-    fmt  = _VIEW_FMT[view]
+    # 'hour' is not meaningful for daily slip records — treat as 'day'
+    view = view if view in ('day', 'week', 'month') else 'day'
+    fmt    = _VIEW_FMT[view]
     bucket = f"date_trunc('{view}', f.scanned_at AT TIME ZONE 'Asia/Bangkok')"
 
     p: dict = {
@@ -277,7 +322,7 @@ def get_defect_chart(
     }
     where = _defect_where(defect_code, model_names, p)
 
-    # Defect bars — SUM(count) per time bucket, DB-side only
+    # Defect bars — COUNT per time bucket
     defect_rows = pg_db.execute(text(f"""
         SELECT to_char({bucket}, '{fmt}') AS label,
                {bucket}                   AS ts,
@@ -287,7 +332,7 @@ def get_defect_chart(
         GROUP BY {bucket} ORDER BY {bucket} ASC
     """), p).fetchall()
 
-    # Total scans per bucket (for context)
+    # Total scans per bucket
     total_p: dict = {"start_dt": p["start_dt"], "end_dt": p["end_dt"]}
     total_where = "scanned_at BETWEEN :start_dt AND :end_dt"
     if model_names:
@@ -296,6 +341,7 @@ def get_defect_chart(
 
     total_rows = pg_db.execute(text(f"""
         SELECT to_char(date_trunc('{view}', scanned_at AT TIME ZONE 'Asia/Bangkok'), '{fmt}') AS label,
+               date_trunc('{view}', scanned_at AT TIME ZONE 'Asia/Bangkok') AS ts,
                COUNT(*) AS total
         FROM fact_qr_scan
         WHERE {total_where}
@@ -303,35 +349,50 @@ def get_defect_chart(
         ORDER BY date_trunc('{view}', scanned_at AT TIME ZONE 'Asia/Bangkok') ASC
     """), total_p).fetchall()
 
-    defect_map = {r[0]: int(r[2]) for r in defect_rows}
-    total_map  = {r[0]: int(r[1]) for r in total_rows}
+    defect_map   = {r[0]: int(r[2]) for r in defect_rows}
+    total_map    = {r[0]: int(r[2]) for r in total_rows}
+    label_ts_map = {r[0]: r[1].replace(tzinfo=None) for r in defect_rows}
+    label_ts_map.update({r[0]: r[1].replace(tzinfo=None) for r in total_rows})
 
-    # Parameter lines — AVG per bucket from TimescaleDB
-    valid_params = [pp for pp in parameter_list if pp in _PARAM_COL]
+    # Parameter lines — AVG per bucket from slip_daily_record
+    # sorted by date ASC, then line_no ASC
+    valid_params = [pp for pp in parameter_list if pp in _SLIP_PARAM_COL]
     param_map: dict = {}
     has_param_data = False
 
     if valid_params:
         col_exprs = ", ".join(
-            f"ROUND(AVG({_PARAM_COL[pp]})::numeric, 2) AS {pp}" for pp in valid_params
+            f"ROUND(AVG(s.{_SLIP_PARAM_COL[pp]})::numeric, 2) AS {pp}"
+            for pp in valid_params
         )
-        pb = f"date_trunc('{view}', time AT TIME ZONE 'Asia/Bangkok')"
-        try:
-            param_rows = tsdb_db.execute(text(f"""
-                SELECT to_char({pb}, '{fmt}') AS label, {col_exprs}
-                FROM hpc_shell_2
-                WHERE time BETWEEN :start_dt AND :end_dt
-                GROUP BY {pb} ORDER BY {pb} ASC
-            """), {"start_dt": p["start_dt"], "end_dt": p["end_dt"]}).fetchall()
-            if param_rows:
-                has_param_data = True
-                for r in param_rows:
-                    param_map[r[0]] = {pp: (float(r[i + 1]) if r[i + 1] is not None else None)
-                                       for i, pp in enumerate(valid_params)}
-        except Exception:
-            pass
+        pb = f"date_trunc('{view}', s.date::timestamp)"
+        slip_rows = pg_db.execute(text(f"""
+            SELECT to_char({pb}, '{fmt}') AS label,
+                   {pb}                   AS ts,
+                   {col_exprs}
+            FROM slip_daily_record s
+            WHERE s.date BETWEEN :start_date AND :end_date
+            GROUP BY {pb}
+            ORDER BY {pb} ASC
+        """), {"start_date": start_date, "end_date": end_date}).fetchall()
 
-    all_labels = sorted(set(total_map) | set(param_map))
+        if slip_rows:
+            has_param_data = True
+            for r in slip_rows:
+                label, ts = r[0], r[1]
+                param_map[label] = {
+                    pp: (float(r[i + 2]) if r[i + 2] is not None else None)
+                    for i, pp in enumerate(valid_params)
+                }
+                if label not in label_ts_map and ts is not None:
+                    label_ts_map[label] = ts if not hasattr(ts, 'tzinfo') else ts.replace(tzinfo=None)
+
+    ucl, lcl = _get_slip_specs(pg_db, valid_params)
+
+    all_labels = sorted(
+        set(total_map) | set(param_map),
+        key=lambda lbl: label_ts_map.get(lbl, datetime.max.replace(tzinfo=None))
+    )
     points = []
     for lbl in all_labels:
         pt: dict = {"label": lbl, "defect": defect_map.get(lbl, 0), "total": total_map.get(lbl, 0)}
@@ -341,9 +402,9 @@ def get_defect_chart(
         points.append(pt)
 
     return {
-        "points": points,
-        "ucl": {pp: _UCL[pp] for pp in valid_params},
-        "lcl": {pp: _LCL[pp] for pp in valid_params},
+        "points":         points,
+        "ucl":            ucl,
+        "lcl":            lcl,
         "has_param_data": has_param_data,
     }
 

@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>P&ID — SNK Body Slip Production System</title>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:#F5F5F0; font-family:'Courier New',monospace; overflow:hidden; }
+
+#topbar {
+  position:fixed; top:0; left:0; right:0; height:42px;
+  background:#1C2331; border-bottom:2px solid #2E3D5B;
+  display:flex; align-items:center; padding:0 14px; gap:10px; z-index:200;
+}
+#topbar h1 { font-size:12px; font-weight:bold; color:#C8D6E5; flex:1; letter-spacing:0.5px; }
+.tag-chip { font-size:9px; padding:2px 7px; background:#2E3D5B; color:#8FA8C8; border-radius:2px; }
+.ctrl { padding:4px 10px; background:#2E3D5B; border:1px solid #3D5280; color:#8FA8C8;
+        border-radius:3px; cursor:pointer; font-size:11px; font-family:'Courier New'; }
+.ctrl:hover { background:#3D5280; color:#C8D6E5; }
+
+#wrap { position:fixed; top:42px; left:0; right:0; bottom:0; overflow:hidden; cursor:grab; }
+#wrap:active { cursor:grabbing; }
+
+#tooltip {
+  position:fixed; background:#1C2331; color:#C8D6E5;
+  border:1px solid #3D5280; border-radius:4px;
+  padding:8px 12px; font-size:10px; font-family:'Courier New';
+  pointer-events:none; display:none; z-index:300; max-width:240px; line-height:1.6;
+  box-shadow:0 4px 12px rgba(0,0,0,0.4);
+}
+
+#legend {
+  position:fixed; bottom:12px; left:12px; z-index:200;
+  background:rgba(245,245,240,0.97); border:1px solid #9CA3AF;
+  border-radius:4px; padding:10px 14px; font-size:9px; font-family:'Courier New';
+}
+.leg-sec { font-weight:bold; color:#374151; margin-bottom:5px; margin-top:6px; }
+.leg-sec:first-child { margin-top:0; }
+.leg-row { display:flex; align-items:center; gap:7px; color:#4B5563; margin-bottom:3px; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1>P&ID — BODY SLIP PRODUCTION SYSTEM | SNK CERAMICS</h1>
+  <span class="tag-chip">DOC: PID-SNK-BS-001</span>
+  <span class="tag-chip">REV: A  2026-05-22</span>
+  <button class="ctrl" onclick="zoomBy(1.2)">ZOOM +</button>
+  <button class="ctrl" onclick="zoomBy(0.8)">ZOOM −</button>
+  <button class="ctrl" onclick="fit()">FIT</button>
+</div>
+
+<div id="wrap"><svg id="pid" xmlns="http://www.w3.org/2000/svg"></svg></div>
+
+<div id="legend">
+  <div class="leg-sec">■ INSTRUMENT TAG</div>
+  <div class="leg-row"><svg width="26" height="26"><circle cx="13" cy="13" r="11" fill="white" stroke="#1C2331" stroke-width="1.4"/><text x="13" y="13" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="Courier New" font-weight="bold" fill="#1C2331">FI</text></svg>Field Mounted</div>
+  <div class="leg-row"><svg width="26" height="26"><circle cx="13" cy="13" r="11" fill="white" stroke="#1C2331" stroke-width="1.4"/><line x1="2" y1="13" x2="24" y2="13" stroke="#1C2331" stroke-width="1"/><text x="13" y="9" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="Courier New" font-weight="bold" fill="#1C2331">FIC</text></svg>Panel / DCS</div>
+  <div class="leg-sec">■ INSTRUMENT VARIABLE</div>
+  <div class="leg-row">LI/LIC — Level</div>
+  <div class="leg-row">DI — Density (Sp.Gr.)</div>
+  <div class="leg-row">VI — Viscosity</div>
+  <div class="leg-row">FI/FIC — Flow</div>
+  <div class="leg-row">AI — Analysis (pH)</div>
+  <div class="leg-sec">■ LINE TYPE</div>
+  <div class="leg-row"><svg width="40" height="8"><line x1="0" y1="4" x2="40" y2="4" stroke="#374151" stroke-width="2"/></svg>Process Pipe</div>
+  <div class="leg-row"><svg width="40" height="8"><line x1="0" y1="4" x2="40" y2="4" stroke="#374151" stroke-width="1" stroke-dasharray="4 3"/></svg>Instrument Signal</div>
+  <div class="leg-row"><svg width="40" height="8"><line x1="0" y1="4" x2="40" y2="4" stroke="#374151" stroke-width="1.5" stroke-dasharray="7 4"/></svg>Additive / Recycle</div>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('pid');
+
+// ─────────────────────────────────────────────
+// COLOUR PALETTE (per slip stream)
+// ─────────────────────────────────────────────
+const C = {
+  ball:     '#1D4ED8',
+  sand:     '#B45309',
+  feldspar: '#6D28D9',
+  pitcher:  '#065F46',
+  dolomite: '#92400E',
+  scrap:    '#991B1B',
+  pipe:     '#1C2331',   // main process pipe color
+  instr:    '#374151',   // instrument
+  zA: '#1E40AF', zB: '#9A3412', zC: '#166534', zD: '#713F12',
+};
+
+// ─────────────────────────────────────────────
+// SVG HELPERS
+// ─────────────────────────────────────────────
+function el(tag, attr={}) {
+  const e = document.createElementNS(NS, tag);
+  Object.entries(attr).forEach(([k,v]) => e.setAttribute(k,v));
+  return e;
+}
+function txt(g, x, y, s, opts={}) {
+  const t = el('text', {
+    x, y, 'text-anchor': opts.anchor||'middle',
+    'dominant-baseline': opts.base||'middle',
+    'font-size': opts.size||8,
+    'font-weight': opts.bold ? 'bold' : 'normal',
+    'font-family': 'Courier New,monospace',
+    fill: opts.fill||C.pipe,
+    ...opts.extra
+  });
+  t.textContent = s;
+  g.appendChild(t);
+  return t;
+}
+
+// ─────────────────────────────────────────────
+// DRAWING PRIMITIVES
+// ─────────────────────────────────────────────
+function line(g, x1,y1,x2,y2, stroke=C.pipe, w=1.8, dash='') {
+  const l = el('line', {x1,y1,x2,y2,stroke,'stroke-width':w});
+  if (dash) l.setAttribute('stroke-dasharray', dash);
+  g.appendChild(l);
+}
+function H(g,x1,x2,y,c=C.pipe,w=1.8,dash='') { line(g,x1,y,x2,y,c,w,dash); }
+function V(g,x,y1,y2,c=C.pipe,w=1.8,dash='') { line(g,x,y1,x,y2,c,w,dash); }
+
+function arrow(g, x,y, dir='down', c=C.pipe, sz=5) {
+  let pts;
+  if (dir==='down')  pts=`${x},${y} ${x-sz},${y-sz*1.6} ${x+sz},${y-sz*1.6}`;
+  if (dir==='up')    pts=`${x},${y} ${x-sz},${y+sz*1.6} ${x+sz},${y+sz*1.6}`;
+  if (dir==='right') pts=`${x},${y} ${x-sz*1.6},${y-sz} ${x-sz*1.6},${y+sz}`;
+  if (dir==='left')  pts=`${x},${y} ${x+sz*1.6},${y-sz} ${x+sz*1.6},${y+sz}`;
+  g.appendChild(el('polygon', {points:pts, fill:c}));
+}
+
+// Routing: go vertical then horizontal
+function routeVH(g, x1,y1, x2,y2, c=C.pipe, w=1.8, dash='') {
+  V(g, x1,y1,y2,c,w,dash);
+  H(g, x1,x2,y2,c,w,dash);
+}
+// Routing: go horizontal then vertical
+function routeHV(g, x1,y1, x2,y2, c=C.pipe, w=1.8, dash='') {
+  H(g, x1,x2,y1,c,w,dash);
+  V(g, x2,y1,y2,c,w,dash);
+}
+
+// ─────────────────────────────────────────────
+// P&ID EQUIPMENT SYMBOLS
+// ─────────────────────────────────────────────
+
+// Hopper / Silo (inverted triangle)
+function drawHopper(g, cx, cy, c, label) {
+  const w=22, h=26;
+  g.appendChild(el('polygon', {
+    points:`${cx-w},${cy-h} ${cx+w},${cy-h} ${cx},${cy+h}`,
+    fill:'#F0F4FF', stroke:c, 'stroke-width':1.5
+  }));
+  // Outlet nozzle
+  g.appendChild(el('rect', {x:cx-5,y:cy+h,width:10,height:9, fill:'#F0F4FF',stroke:c,'stroke-width':1.5}));
+  if (label) txt(g, cx, cy-h-10, label, {size:8,bold:true,fill:c});
+  return { outlet:{x:cx, y:cy+h+9} };
+}
+
+// Ball Mill (circle with X — rotating vessel)
+function drawBallMill(g, cx, cy, c) {
+  const r=26;
+  g.appendChild(el('circle', {cx,cy,r,fill:'#EEF2FF',stroke:c,'stroke-width':1.8}));
+  // "M" motor on top
+  g.appendChild(el('rect', {x:cx-10,y:cy-r-12,width:20,height:12,rx:2,fill:'#EEF2FF',stroke:c,'stroke-width':1.3}));
+  txt(g, cx, cy-r-6, 'M', {size:8,bold:true,fill:c});
+  // X inside = rotating
+  line(g,cx-14,cy-14,cx+14,cy+14,c,1.2);
+  line(g,cx+14,cy-14,cx-14,cy+14,c,1.2);
+  txt(g, cx, cy+r+12, 'BALL MILL', {size:7,fill:c});
+  return {top:{x:cx,y:cy-r}, bot:{x:cx,y:cy+r}};
+}
+
+// Agitator vessel (rectangle + propeller)
+function drawAgitator(g, cx, cy, c) {
+  const w=30, h=30;
+  g.appendChild(el('rect', {x:cx-w,y:cy-h,width:w*2,height:h*2,rx:3,fill:'#FFFBEB',stroke:c,'stroke-width':1.5}));
+  // Shaft
+  line(g, cx,cy-h, cx,cy+8, c, 1.3);
+  // Impeller blades (2 levels)
+  line(g, cx-18,cy,   cx+18,cy,   c, 2.2);
+  line(g, cx-18,cy+8, cx+18,cy+8, c, 2.2);
+  // Motor on top
+  g.appendChild(el('rect', {x:cx-9,y:cy-h-12,width:18,height:12,rx:2,fill:'#FFFBEB',stroke:c,'stroke-width':1.3}));
+  txt(g, cx, cy-h-6, 'M', {size:8,bold:true,fill:c});
+  txt(g, cx, cy+h+12, 'AGITATOR', {size:7,fill:c});
+  return {top:{x:cx,y:cy-h}, bot:{x:cx,y:cy+h}};
+}
+
+// Crusher (gear/triangle symbol)
+function drawCrusher(g, cx, cy, c, sub='CRUSHER') {
+  const r=22;
+  // Gear-ish: circle with teeth indicators
+  g.appendChild(el('circle', {cx,cy,r,fill:'#FEF2F2',stroke:c,'stroke-width':1.8}));
+  // Cross inside = mechanical
+  line(g,cx-14,cy,cx+14,cy,c,2);
+  line(g,cx,cy-14,cx,cy+14,c,2);
+  // Motor
+  g.appendChild(el('rect', {x:cx-9,y:cy-r-12,width:18,height:12,rx:2,fill:'#FEF2F2',stroke:c,'stroke-width':1.3}));
+  txt(g, cx, cy-r-6, 'M', {size:8,bold:true,fill:c});
+  txt(g, cx, cy+r+12, sub, {size:7,fill:c});
+  return {top:{x:cx,y:cy-r}, bot:{x:cx,y:cy+r}};
+}
+
+// Vibrating Screen (rectangle with wave)
+function drawScreen(g, cx, cy, c, mesh) {
+  const w=40, h=14;
+  g.appendChild(el('rect', {x:cx-w,y:cy-h,width:w*2,height:h*2,rx:2,fill:'#F0FFF4',stroke:c,'stroke-width':1.5}));
+  // Wavy line inside
+  const wv = `M ${cx-30},${cy} Q ${cx-20},${cy-7} ${cx-10},${cy} Q ${cx},${cy+7} ${cx+10},${cy} Q ${cx+20},${cy-7} ${cx+30},${cy}`;
+  g.appendChild(el('path',{d:wv,fill:'none',stroke:c,'stroke-width':1.2}));
+  txt(g, cx, cy+h+11, `SCREEN ${mesh}`, {size:7,fill:c});
+  return {top:{x:cx,y:cy-h}, bot:{x:cx,y:cy+h}};
+}
+
+// Vertical Tank (cylinder)
+function drawTank(g, cx, cy, c, w=32, h=48, tag='') {
+  const ew=w, eh=7;
+  // Top ellipse
+  g.appendChild(el('ellipse',{cx,cy:cy-h/2+eh/2,rx:ew,ry:eh,fill:'#F8FAFF',stroke:c,'stroke-width':1.5}));
+  // Body
+  g.appendChild(el('rect',{x:cx-ew,y:cy-h/2+eh/2,width:ew*2,height:h-eh,fill:'#F8FAFF',stroke:c,'stroke-width':1.5}));
+  // Bottom ellipse
+  g.appendChild(el('ellipse',{cx,cy:cy+h/2-eh/2,rx:ew,ry:eh,fill:'#F0F4FF',stroke:c,'stroke-width':1.5}));
+  if (tag) txt(g, cx, cy, tag, {size:7.5,fill:c,bold:true});
+  return {top:{x:cx,y:cy-h/2+eh}, bot:{x:cx,y:cy+h/2-eh/2}};
+}
+
+// Pump (circle + triangle)
+function drawPump(g, cx, cy, c, tag='') {
+  const r=11;
+  g.appendChild(el('circle',{cx,cy,r,fill:'white',stroke:c,'stroke-width':1.5}));
+  g.appendChild(el('polygon',{points:`${cx},${cy-7} ${cx+8},${cy+5} ${cx-8},${cy+5}`,fill:c}));
+  if (tag) txt(g, cx+r+14, cy, tag, {size:7,fill:c,anchor:'start',base:'middle'});
+  return {top:{x:cx,y:cy-r},bot:{x:cx,y:cy+r},left:{x:cx-r,y:cy},right:{x:cx+r,y:cy}};
+}
+
+// Control Valve (bowtie)
+function drawCtrlValve(g, cx, cy, c) {
+  g.appendChild(el('polygon',{points:`${cx-11},${cy-8} ${cx+11},${cy-8} ${cx},${cy} ${cx+11},${cy+8} ${cx-11},${cy+8} ${cx},${cy}`,fill:'white',stroke:c,'stroke-width':1.5}));
+  // Actuator circle on top
+  g.appendChild(el('circle',{cx,cy:cy-17,r:7,fill:'white',stroke:c,'stroke-width':1.3}));
+  line(g,cx,cy-8,cx,cy-10,c,1.2);
+  return {top:{x:cx,y:cy-8},bot:{x:cx,y:cy+8}};
+}
+
+// Instrument bubble (ISA style)
+// mounted: 'field' = plain circle, 'panel' = circle+line, 'dcs' = circle+double-line
+function drawInstr(g, cx, cy, tag, num, desc, mounted='field', c=C.instr) {
+  const r=14;
+  g.appendChild(el('circle',{cx,cy,r,fill:'white',stroke:c,'stroke-width':1.5}));
+  if (mounted==='panel') {
+    line(g,cx-r,cy,cx+r,cy,c,1);
+  } else if (mounted==='dcs') {
+    line(g,cx-r,cy-2,cx+r,cy-2,c,0.8);
+    line(g,cx-r,cy+2,cx+r,cy+2,c,0.8);
+  }
+  // Tag letter (upper half)
+  const tl = el('text',{x:cx,y:mounted!=='field'?cy-4.5:cy-2.5,'text-anchor':'middle','dominant-baseline':'middle','font-size':6.5,'font-weight':'bold','font-family':'Courier New',fill:c});
+  tl.textContent = tag;
+  g.appendChild(tl);
+  // Number (lower half)
+  const tn = el('text',{x:cx,y:mounted!=='field'?cy+5:cy+5.5,'text-anchor':'middle','dominant-baseline':'middle','font-size':6,'font-family':'Courier New',fill:c});
+  tn.textContent = num;
+  g.appendChild(tn);
+
+  // Hover tooltip
+  const hit = el('circle',{cx,cy,r:r+4,fill:'transparent',style:'cursor:pointer'});
+  hit.addEventListener('mouseenter', (e) => {
+    const tip = document.getElementById('tooltip');
+    const col = c === C.instr ? '#93C5FD' : c;
+    tip.innerHTML = `<b style="color:${col}">${tag}-${num}</b><br><span style="color:#9CA3AF">${desc}</span>`;
+    tip.style.display='block';
+  });
+  hit.addEventListener('mousemove', (e) => {
+    const tip = document.getElementById('tooltip');
+    tip.style.left=(e.clientX+14)+'px';
+    tip.style.top=(e.clientY-6)+'px';
+  });
+  hit.addEventListener('mouseleave', ()=> { document.getElementById('tooltip').style.display='none'; });
+  g.appendChild(hit);
+  return {top:{x:cx,y:cy-r},bot:{x:cx,y:cy+r},left:{x:cx-r,y:cy},right:{x:cx+r,y:cy}};
+}
+
+// Signal line (dashed, thin)
+function sig(g, x1,y1, x2,y2) { line(g,x1,y1,x2,y2,C.instr,0.8,'4 3'); }
+
+// Section banner
+function banner(g, x,y,w, text, c) {
+  g.appendChild(el('rect',{x,y:y-10,width:w,height:20,rx:3,fill:c,opacity:0.10}));
+  g.appendChild(el('rect',{x,y:y-10,width:4,height:20,rx:2,fill:c}));
+  txt(g, x+10, y+1, text, {size:9,bold:true,fill:c,anchor:'start'});
+}
+
+// Phase divider rule
+function phaseRule(g, x1,x2, y, label) {
+  H(g,x1,x2,y,C.pipe,0.6,'3 3');
+  txt(g, x1+6, y-8, label, {size:9,bold:true,fill:'#374151',anchor:'start'});
+}
+
+// ─────────────────────────────────────────────
+// STREAM DEFINITIONS
+// ─────────────────────────────────────────────
+// Each stream occupies a "lane" around its cx
+const STREAMS = [
+  { id:'ball',     name:'BALL SLIP',     cx:110, c:C.ball,
+    hoppers:['KAOLIN','CLAY','QRTZ/FLD'],
+    equip:'ballmill', mesh:'60M', nTanks:3,
+    collectTag:'T-110', pumpTag:'P-101',
+    instrs:[
+      {tag:'LIC',num:'101',desc:'Ball Slip Storage Tank Level Controller\nTarget: 50–80% full',mount:'dcs'},
+      {tag:'DI', num:'110',desc:'Ball Slip Specific Gravity Indicator\nTarget: Sp.Gr. = 1.68–1.72 g/mL',mount:'field'},
+      {tag:'VI', num:'111',desc:'Viscosity Indicator — Viscosity V₀\nTarget: 18–25 s (Ford Cup #4)',mount:'field'},
+    ],
+    toDip:true,
+  },
+  { id:'sand',     name:'SAND SLIP',     cx:305, c:C.sand,
+    hoppers:['SAND','SODA ASH'],
+    equip:'ballmill', mesh:'60M', nTanks:2,
+    collectTag:'T-210', pumpTag:'P-201',
+    instrs:[
+      {tag:'LI', num:'201',desc:'Sand Slip Tank Level Indicator',mount:'field'},
+      {tag:'DI', num:'210',desc:'Sand Slip Specific Gravity\nTarget: Sp.Gr. = 1.65–1.68 g/mL',mount:'field'},
+    ],
+    toDip:true,
+  },
+  { id:'feldspar', name:'FELDSPAR SLIP', cx:468, c:C.feldspar,
+    hoppers:['FELDSPAR','WATER'],
+    equip:'ballmill', mesh:'100M', nTanks:2,
+    collectTag:'T-310', pumpTag:'P-301',
+    instrs:[
+      {tag:'LI', num:'301',desc:'Feldspar Slip Tank Level Indicator',mount:'field'},
+      {tag:'VI', num:'310',desc:'Feldspar Slip Viscosity\nTarget: Residue 100M < 1%\nV₀ = 20–30 s',mount:'field'},
+    ],
+    toDip:true,
+  },
+  { id:'pitcher',  name:'PITCHER SLIP',  cx:610, c:C.pitcher,
+    hoppers:['PITCHER (Broken Ware)'],
+    equip:'crusher', mesh:'80M', nTanks:1,
+    collectTag:'T-410', pumpTag:'P-401',
+    instrs:[
+      {tag:'DI', num:'410',desc:'Pitcher Slip Specific Gravity\nRecycle broken ware → Sp.Gr. check before blend',mount:'field'},
+    ],
+    toDip:true,
+  },
+  { id:'dolomite', name:'DOLOMITE',      cx:730, c:C.dolomite,
+    hoppers:['DOLOMITE','WATER'],
+    equip:'agitator', mesh:'60M', nTanks:1,
+    collectTag:'T-510', pumpTag:'P-501',
+    instrs:[
+      {tag:'AI', num:'510',desc:'Dolomite Slip pH Analyzer\nTarget: pH = 8.0–9.0\nAdditive → Blending tanks',mount:'field'},
+    ],
+    toDip:false, isAdditive:true,
+  },
+  { id:'scrap',    name:'SCRAP SLIP ♻',  cx:855, c:C.scrap,
+    hoppers:['SCRAP (Green/Fired)'],
+    equip:'crusher', mesh:'60M', nTanks:1,
+    collectTag:'T-610', pumpTag:'P-601',
+    instrs:[
+      {tag:'DI', num:'610',desc:'Scrap Slip Specific Gravity\nRecycle 10–15% into blend\nMust verify Sp.Gr. before adding',mount:'field'},
+    ],
+    toDip:false, isAdditive:true, isRecycle:true,
+  },
+];
+
+// Row Y centers
+const Y = {
+  label:  50,
+  hopper: 95,
+  equip:  205,
+  screen: 308,
+  tanks:  405,
+  coll:   490,
+  pump:   550,
+  bus:    600,
+  dip:    660,
+  blend:  750,
+  drain:  835,
+  feed:   915,
+  cast:  1000,
+};
+
+// SVG dimensions
+const W = 1180, H = 1080;
+svg.setAttribute('width', W);
+svg.setAttribute('height', H);
+
+const root = el('g', {id:'root'});
+svg.appendChild(root);
+
+// ─────────────────────────────────────────────
+// BACKGROUND, BORDER, GRID
+// ─────────────────────────────────────────────
+root.appendChild(el('rect',{x:0,y:0,width:W,height:H,fill:'#FDFDF8'}));
+// Subtle grid
+for (let x=50;x<W;x+=50) root.appendChild(el('line',{x1:x,y1:0,x2:x,y2:H,stroke:'#E5E7EB','stroke-width':0.3}));
+for (let y=50;y<H;y+=50) root.appendChild(el('line',{x1:0,y1:y,x2:W,y2:y,stroke:'#E5E7EB','stroke-width':0.3}));
+// Border
+root.appendChild(el('rect',{x:8,y:8,width:W-16,height:H-16,fill:'none',stroke:C.pipe,'stroke-width':2}));
+root.appendChild(el('rect',{x:12,y:12,width:W-24,height:H-24,fill:'none',stroke:C.pipe,'stroke-width':0.5}));
+
+// Phase dividers
+phaseRule(root, 14, W-14, 36,  '// PHASE 1 — SLIP PREPARATION (6 STREAMS)');
+phaseRule(root, 14, W-14, 618, '// PHASE 2 — AUTO DIPPING · BLENDING · ZONE DISTRIBUTION');
+phaseRule(root, 14, W-14, 940, '// PHASE 3 — CASTING ROOMS');
+
+// ─────────────────────────────────────────────
+// DRAW EACH SLIP STREAM
+// ─────────────────────────────────────────────
+STREAMS.forEach(st => {
+  const cx = st.cx;
+  const c  = st.c;
+  const dash = (st.isAdditive||st.isRecycle) ? '8 5' : '';
+
+  // Stream label banner
+  banner(root, cx-75, Y.label, 150, st.name, c);
+
+  // ── Raw Material Hoppers ──
+  const nh = st.hoppers.length;
+  const hoffset = nh === 1 ? [0] : nh === 2 ? [-25, 25] : [-48, 0, 48];
+  hoffset.forEach((dx, i) => {
+    const hx = cx + dx;
+    drawHopper(root, hx, Y.hopper, c, st.hoppers[i]);
+    // Pipe from hopper outlet to equipment
+    V(root, hx, Y.hopper+35, Y.hopper+55, c, 1.6);
+    if (dx !== 0) {
+      H(root, hx, cx, Y.hopper+55, c, 1.6);
+    }
+  });
+  // Converge to equipment top
+  V(root, cx, Y.hopper+55, Y.equip - (st.equip==='ballmill'?28:24), c, 1.6);
+
+  // ── Equipment ──
+  if (st.equip==='ballmill')  drawBallMill(root, cx, Y.equip, c);
+  if (st.equip==='agitator')  drawAgitator(root, cx, Y.equip, c);
+  if (st.equip==='crusher')   drawCrusher(root,  cx, Y.equip, c, 'CRUSHER');
+
+  // Water injection (for ball mill and agitator)
+  if (st.equip==='ballmill' || st.equip==='agitator') {
+    const wx = cx - 55;
+    H(root, wx, cx-28, Y.equip, c, 1.3);
+    arrow(root, cx-28, Y.equip, 'right', c, 4);
+    txt(root, wx-2, Y.equip-6, 'H₂O', {size:7,fill:c,anchor:'end'});
+  }
+
+  // Pipe equipment → screen
+  const equipBot = (st.equip==='ballmill') ? Y.equip+26 : Y.equip+24;
+  V(root, cx, equipBot, Y.screen-14, c, 1.6);
+
+  // ── Vibrating Screen ──
+  drawScreen(root, cx, Y.screen, c, st.mesh);
+
+  // Pipe screen → tanks
+  V(root, cx, Y.screen+14, Y.screen+35, c, 1.6);
+
+  // ── Storage Tanks ──
+  const ntx = st.nTanks;
+  const toffsets = ntx===1?[0]:ntx===2?[-28,28]:[-56,0,56];
+
+  // Distribute pipe to multiple tanks
+  if (ntx > 1) H(root, cx+toffsets[0], cx+toffsets[ntx-1], Y.screen+35, c, 1.5);
+  toffsets.forEach((dx,i) => {
+    const tx = cx+dx;
+    V(root, tx, Y.screen+35, Y.tanks-26, c, 1.5);
+    drawTank(root, tx, Y.tanks, c, 28, 52, `T-${100*(STREAMS.indexOf(st)+1)+i+1}`);
+    // Level instrument on first/last tank
+    if (i===ntx-1) {
+      sig(root, tx+28, Y.tanks, tx+52, Y.tanks);
+      drawInstr(root, tx+66, Y.tanks, st.instrs[0].tag, st.instrs[0].num, st.instrs[0].desc, st.instrs[0].mount, c);
+    }
+    // Pipe from tank bottom
+    V(root, tx, Y.tanks+26, Y.tanks+46, c, 1.5);
+  });
+
+  // Horizontal manifold at tank bottom → collect
+  if (ntx > 1) H(root, cx+toffsets[0], cx+toffsets[ntx-1], Y.tanks+46, c, 1.5);
+  V(root, cx, Y.tanks+46, Y.coll-26, c, 1.6);
+
+  // ── Collect Tank ──
+  drawTank(root, cx, Y.coll, c, 34, 52, st.collectTag);
+
+  // Instruments on collect tank (DI, VI, AI)
+  const ciLen = st.instrs.length;
+  for (let ii=1; ii<ciLen; ii++) {
+    const ins = st.instrs[ii];
+    const iy = Y.coll - 8 + (ii-1)*18;
+    sig(root, cx+34, iy, cx+58, iy);
+    drawInstr(root, cx+72, iy, ins.tag, ins.num, ins.desc, ins.mount, c);
+  }
+
+  // Pipe collect → pump
+  V(root, cx, Y.coll+26, Y.pump-11, c, 1.6);
+
+  // ── Pump ──
+  drawPump(root, cx, Y.pump, c, st.pumpTag);
+
+  // Pipe pump → bus
+  V(root, cx, Y.pump+11, Y.bus, c, 1.6);
+  // Arrowhead into bus
+  arrow(root, cx, Y.bus, 'down', c, 4);
+});
+
+// ─────────────────────────────────────────────
+// MANIFOLD BUS (horizontal pipe)
+// ─────────────────────────────────────────────
+// Only connect streams that go to AUTO DIPPING
+const dipStreams = STREAMS.filter(s=>s.toDip);
+const leftDip  = dipStreams[0].cx;
+const rightDip = dipStreams[dipStreams.length-1].cx;
+H(root, leftDip, rightDip, Y.bus, C.pipe, 2.5);
+
+// Additive streams (dolomite, scrap) go alongside with dashed pipe
+const addStreams = STREAMS.filter(s=>s.isAdditive);
+addStreams.forEach(st => {
+  V(root, st.cx, Y.bus, Y.bus+14, st.c, 1.4, '7 4');
+  const adTxt = el('text',{x:st.cx+6,y:Y.bus+24,'font-size':7,'font-family':'Courier New',fill:st.c,'font-weight':'bold'});
+  adTxt.textContent = st.isRecycle ? '→ RECYCLE ♻' : '→ ADDITIVE';
+  root.appendChild(adTxt);
+});
+
+// ─────────────────────────────────────────────
+// AUTO DIPPING
+// ─────────────────────────────────────────────
+const dipCx  = (leftDip + rightDip) / 2; // ~385
+const dipW   = 350, dipH = 56;
+const dipX   = dipCx - dipW/2;
+const dipY   = Y.dip;
+
+// Pipe bus → AUTO DIPPING
+V(root, dipCx, Y.bus, dipY-dipH/2, C.pipe, 2.2);
+arrow(root, dipCx, dipY-dipH/2, 'down', C.pipe, 5);
+
+// AUTO DIPPING vessel rectangle
+root.appendChild(el('rect',{x:dipX,y:dipY-dipH/2,width:dipW,height:dipH,rx:6,fill:'#EFF6FF',stroke:C.ball,'stroke-width':2.5}));
+txt(root, dipCx, dipY-8,   'AUTO DIPPING SYSTEM',                   {size:11,bold:true,fill:C.ball});
+txt(root, dipCx, dipY+9,   'RECIPE BLEND CONTROL — BALL : SAND : FELDSPAR : PITCHER', {size:7.5,fill:'#374151'});
+
+// FIC instrument on AUTO DIPPING
+sig(root, dipX+dipW, dipY, dipX+dipW+20, dipY);
+drawInstr(root, dipX+dipW+34, dipY, 'FIC','701','Auto Dipping Flow / Recipe Ratio Controller\nDCS controlled — Ball:Sand:Feldspar:Pitcher ratio','dcs',C.ball);
+
+// DI + VI on AUTO DIPPING output
+sig(root, dipCx-30, dipY+dipH/2, dipCx-30, dipY+dipH/2+20);
+drawInstr(root, dipCx-30, dipY+dipH/2+34, 'DI','702','Auto Dipping Output Specific Gravity\nTarget: Sp.Gr. = 1.70–1.74 g/mL','panel',C.ball);
+
+sig(root, dipCx+30, dipY+dipH/2, dipCx+30, dipY+dipH/2+20);
+drawInstr(root, dipCx+30, dipY+dipH/2+34, 'VI','703','Auto Dipping Output Viscosity V₀\nTarget: V₀ = 18–24 s (Ford Cup)','panel',C.ball);
+
+// ─────────────────────────────────────────────
+// DISTRIBUTION: 4 ZONES
+// ─────────────────────────────────────────────
+const ZONES = [
+  { id:'A', c:C.zA, label:'ZONE A', cx:155, blendTags:['T-7A1','T-7A2'], drainTag:'T-810', feedTag:'T-820', pumpTag:'P-801',
+    instrs:[
+      {tag:'LIC',num:'821',desc:'Zone A Feeding Tank Level Controller\nLow level → stop casting line',mount:'dcs'},
+      {tag:'FI', num:'822',desc:'Zone A Flow Indicator — to Casting Room\nMonitor slip supply rate',mount:'field'},
+    ],
+    castRooms:['ห้องหล่อ A', 'ห้องหล่อ HP'],
+    castCx:[90,220],
+  },
+  { id:'B', c:C.zB, label:'ZONE B', cx:400, blendTags:['T-7B1','T-7B2'], drainTag:'T-830', feedTag:'T-840', pumpTag:'P-802',
+    instrs:[
+      {tag:'LIC',num:'841',desc:'Zone B Feeding Tank Level Controller',mount:'dcs'},
+      {tag:'FI', num:'842',desc:'Zone B Flow to ห้องหล่อ B',mount:'field'},
+    ],
+    castRooms:['ห้องหล่อ B'],
+    castCx:[400],
+  },
+  { id:'C', c:C.zC, label:'ZONE C', cx:640, blendTags:['T-7C1','T-7C2'], drainTag:'T-850', feedTag:'T-860', pumpTag:'P-803',
+    instrs:[
+      {tag:'LIC',num:'861',desc:'Zone C Feeding Tank Level Controller',mount:'dcs'},
+      {tag:'FI', num:'862',desc:'Zone C Flow to ห้องหล่อ C + F',mount:'field'},
+    ],
+    castRooms:['ห้องหล่อ C','ห้องหล่อ F'],
+    castCx:[575,710],
+  },
+  { id:'D', c:C.zD, label:'ZONE D', cx:900, blendTags:['T-7D1','T-7D2'], drainTag:'T-870', feedTag:'T-880', pumpTag:'P-804',
+    instrs:[
+      {tag:'LIC',num:'881',desc:'Zone D Feeding Tank Level Controller',mount:'dcs'},
+      {tag:'FI', num:'882',desc:'Zone D Flow to ห้องหล่อ D',mount:'field'},
+    ],
+    castRooms:['ห้องหล่อ D'],
+    castCx:[900],
+  },
+];
+
+// Horizontal distribution bus from AUTO DIPPING outlet
+const distY  = dipY + dipH/2;
+const leftZ  = ZONES[0].cx;
+const rightZ = ZONES[ZONES.length-1].cx;
+
+// Pipe AUTO DIPPING out → split bus
+V(root, dipCx, distY, Y.blend-45, C.pipe, 2.2);
+// Horizontal bus to all zones
+H(root, leftZ, rightZ, Y.blend-45, C.pipe, 2);
+
+ZONES.forEach(z => {
+  const zc = z.c;
+  const cx = z.cx;
+
+  // Zone banner
+  banner(root, cx-80, Y.blend-72, 160, z.label, zc);
+
+  // Pipe from distribution bus → blending tanks area
+  V(root, cx, Y.blend-45, Y.blend-30, zc, 2);
+  arrow(root, cx, Y.blend-30, 'down', zc, 4);
+
+  // Two blending tanks side by side
+  const [lx, rx] = [cx-30, cx+30];
+  H(root, lx, rx, Y.blend-30, zc, 1.5);
+  V(root, lx, Y.blend-30, Y.blend-22, zc, 1.5);
+  V(root, rx, Y.blend-30, Y.blend-22, zc, 1.5);
+  drawTank(root, lx, Y.blend, zc, 24, 44, z.blendTags[0]);
+  drawTank(root, rx, Y.blend, zc, 24, 44, z.blendTags[1]);
+  // Additive notes on blending tanks
+  const anTxt = el('text',{x:cx,y:Y.blend+32,'text-anchor':'middle','font-size':7,'font-family':'Courier New',fill:zc});
+  anTxt.textContent = '+ Dolomite + Scrap';
+  root.appendChild(anTxt);
+
+  V(root, lx, Y.blend+22, Y.blend+42, zc, 1.5);
+  V(root, rx, Y.blend+22, Y.blend+42, zc, 1.5);
+  H(root, lx, rx, Y.blend+42, zc, 1.5);
+  V(root, cx, Y.blend+42, Y.drain-26, zc, 1.8);
+
+  // Drain Slip tank
+  drawTank(root, cx, Y.drain, zc, 36, 52, z.drainTag);
+  txt(root, cx, Y.drain+16, 'DRAIN SLIP', {size:6.5,fill:zc});
+
+  // DI on drain tank
+  sig(root, cx+36, Y.drain-10, cx+56, Y.drain-10);
+  drawInstr(root, cx+70, Y.drain-10, 'DI',`${8}${z.id}0`,'Drain Slip Specific Gravity\nFinal check: Sp.Gr. = 1.72–1.76 g/mL','field',zc);
+
+  // Pipe drain → pump
+  V(root, cx, Y.drain+26, Y.drain+40, zc, 1.8);
+  // Pump
+  drawPump(root, cx, Y.drain+51, zc, z.pumpTag);
+
+  // Pipe pump → feeding tank
+  V(root, cx, Y.drain+62, Y.feed-26, zc, 1.8);
+  arrow(root, cx, Y.feed-26, 'down', zc, 4);
+
+  // Feeding Tank
+  drawTank(root, cx, Y.feed, zc, 40, 52, z.feedTag);
+  txt(root, cx, Y.feed+16, 'FEEDING TANK', {size:6.5,fill:zc});
+
+  // Instruments on feeding tank
+  z.instrs.forEach((ins,ii) => {
+    const iy = Y.feed - 12 + ii*20;
+    sig(root, cx-40, iy, cx-60, iy);
+    drawInstr(root, cx-74, iy, ins.tag, ins.num, ins.desc, ins.mount, zc);
+  });
+
+  // Control valve before casting
+  V(root, cx, Y.feed+26, Y.cast-55, zc, 1.8);
+  drawCtrlValve(root, cx, Y.cast-38);
+  // Control valve actuator label
+  const fvcTag = el('text',{x:cx+14,y:Y.cast-38,'font-size':7,'font-family':'Courier New',fill:zc,'dominant-baseline':'middle'});
+  fvcTag.textContent = `FCV-${z.id}01`;
+  root.appendChild(fvcTag);
+  V(root, cx, Y.cast-30, Y.cast-18, zc, 1.8);
+
+  // Distribute to casting rooms
+  const cr = z.castCx;
+  if (cr.length > 1) {
+    H(root, cr[0], cr[cr.length-1], Y.cast-18, zc, 1.6);
+    cr.forEach(rx2 => { V(root, rx2, Y.cast-18, Y.cast-8, zc, 1.6); arrow(root, rx2, Y.cast-8, 'down', zc, 4); });
+  } else {
+    arrow(root, cx, Y.cast-8, 'down', zc, 4);
+  }
+
+  // Casting room boxes
+  z.castRooms.forEach((name,ii) => {
+    const castX = cr[ii] || cx;
+    const castW=118, castH=56;
+    root.appendChild(el('rect',{x:castX-castW/2,y:Y.cast,width:castW,height:castH,rx:6,fill:'#FAFAFA',stroke:zc,'stroke-width':2}));
+    // Header bar
+    root.appendChild(el('rect',{x:castX-castW/2,y:Y.cast,width:castW,height:18,rx:6,fill:zc}));
+    root.appendChild(el('rect',{x:castX-castW/2,y:Y.cast+12,width:castW,height:6,fill:zc}));
+    txt(root, castX, Y.cast+9, name, {size:9,bold:true,fill:'white'});
+    txt(root, castX, Y.cast+30, 'Plaster Mold Casting', {size:6.5,fill:'#6B7280'});
+    txt(root, castX, Y.cast+42, 'Mold Cycle: 60–90 min', {size:6.5,fill:'#6B7280'});
+    // HP note
+    if (name.includes('HP')) {
+      txt(root, castX, Y.cast+30, 'High Pressure: 3–5 bar', {size:6.5,fill:'#6B7280'});
+      txt(root, castX, Y.cast+42, 'Cycle: 30–45 min', {size:6.5,fill:'#6B7280'});
+    }
+  });
+});
+
+// ─────────────────────────────────────────────
+// TITLE BLOCK (bottom-right)
+// ─────────────────────────────────────────────
+const tbX=W-340, tbY=H-116, tbW=326, tbH=100;
+root.appendChild(el('rect',{x:tbX,y:tbY,width:tbW,height:tbH,fill:'#FAFAFA',stroke:C.pipe,'stroke-width':1.5}));
+const rows=[
+  ['PROJECT',  'SNK CERAMICS MANUFACTURING'],
+  ['DOCUMENT', 'PID-SNK-BS-001'],
+  ['TITLE',    'BODY SLIP PROD. SYSTEM — SIMPLIFIED'],
+  ['REV',      'A — 2026-05-22'],
+  ['BY',       'SNK ENGINEERING DEPT.'],
+];
+rows.forEach((r,i)=>{
+  const ry=tbY+i*20;
+  if (i>0) H(root,tbX,tbX+tbW,ry,C.pipe,0.6);
+  H(root,tbX+85,tbX+85,ry,C.pipe,0.6);
+  root.appendChild(el('line',{x1:tbX+85,y1:ry,x2:tbX+85,y2:ry+20,stroke:C.pipe,'stroke-width':0.6}));
+  txt(root,tbX+4,ry+10,r[0],{size:7.5,bold:true,fill:'#374151',anchor:'start'});
+  txt(root,tbX+89,ry+10,r[1],{size:7.5,fill:C.pipe,anchor:'start'});
+});
+
+// ─────────────────────────────────────────────
+// PAN + ZOOM
+// ─────────────────────────────────────────────
+let sc=1, tx=0, ty=0, pan=false, lx=0, ly=0;
+const wrap=document.getElementById('wrap');
+
+function applyT() {
+  root.setAttribute('transform',`translate(${tx},${ty}) scale(${sc})`);
+}
+function zoomBy(f) {
+  sc=Math.min(Math.max(sc*f,0.15),4);
+  applyT();
+}
+function fit() {
+  const vw=wrap.clientWidth, vh=wrap.clientHeight;
+  sc=Math.min(vw/W, vh/H)*0.97;
+  tx=(vw-W*sc)/2; ty=(vh-H*sc)/2;
+  applyT();
+}
+
+wrap.addEventListener('mousedown',e=>{ pan=true; lx=e.clientX; ly=e.clientY; });
+wrap.addEventListener('mousemove',e=>{ if(!pan)return; tx+=e.clientX-lx; ty+=e.clientY-ly; lx=e.clientX; ly=e.clientY; applyT(); });
+wrap.addEventListener('mouseup',()=>pan=false);
+wrap.addEventListener('mouseleave',()=>pan=false);
+wrap.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const r=wrap.getBoundingClientRect();
+  const mx=e.clientX-r.left, my=e.clientY-r.top;
+  const f=e.deltaY<0?1.12:0.89;
+  const ns=Math.min(Math.max(sc*f,0.15),4);
+  tx=mx-(mx-tx)*(ns/sc); ty=my-(my-ty)*(ns/sc); sc=ns;
+  applyT();
+},{passive:false});
+
+setTimeout(fit, 80);
+</script>
+</body>
+</html>

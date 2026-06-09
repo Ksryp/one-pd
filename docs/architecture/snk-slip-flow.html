@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SNK — Process Flow การผลิตน้ำดิน</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0D1117;
+    font-family: 'Inter', 'Sarabun', sans-serif;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ── TOP BAR ── */
+  #topbar {
+    position: fixed; top: 0; left: 0; right: 0; height: 48px;
+    background: #161B22;
+    border-bottom: 1px solid #30363D;
+    display: flex; align-items: center; padding: 0 16px; gap: 12px;
+    z-index: 200;
+  }
+  #topbar h1 {
+    font-size: 13px; font-weight: 700; color: #E6EDF3; flex: 1;
+  }
+  #topbar .badge {
+    font-size: 10px; padding: 2px 8px; border-radius: 10px;
+    background: #1A2744; color: #4F8EE8; border: 1px solid #1E6FCC;
+  }
+  .ctrl-btn {
+    padding: 5px 10px; border-radius: 6px; border: 1px solid #30363D;
+    background: #21262D; color: #8B949E; cursor: pointer;
+    font-size: 12px; transition: all 0.15s;
+  }
+  .ctrl-btn:hover { background: #30363D; color: #E6EDF3; }
+
+  /* ── LEGEND ── */
+  #legend {
+    position: fixed; bottom: 12px; left: 12px;
+    background: rgba(22,27,34,0.95);
+    border: 1px solid #30363D; border-radius: 8px;
+    padding: 10px 12px; z-index: 200;
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  #legend .leg-title {
+    font-size: 9px; font-weight: 700; color: #8B949E;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;
+  }
+  #legend .leg-row {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10px; color: #8B949E;
+  }
+  #legend .leg-dot {
+    width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0;
+  }
+
+  /* ── ZOOM INFO ── */
+  #zoom-info {
+    position: fixed; bottom: 12px; right: 12px;
+    font-size: 11px; color: #6E7681;
+    background: rgba(22,27,34,0.8);
+    padding: 4px 8px; border-radius: 6px;
+    border: 1px solid #21262D;
+    z-index: 200;
+  }
+
+  /* ── CANVAS ── */
+  #canvas-wrap {
+    position: fixed; top: 48px; left: 0; right: 0; bottom: 0;
+    overflow: hidden;
+    cursor: grab;
+  }
+  #canvas-wrap:active { cursor: grabbing; }
+  #canvas-wrap svg { display: block; }
+
+  /* ── TOOLTIP ── */
+  #tooltip {
+    position: fixed;
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 11px;
+    color: #E6EDF3;
+    pointer-events: none;
+    z-index: 300;
+    display: none;
+    max-width: 220px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1>⚙️ SNK — Process Flow การผลิตน้ำดิน (Body Slip)</h1>
+  <span class="badge">6 Slip Types · 3 Phases · 6 Casting Rooms</span>
+  <button class="ctrl-btn" onclick="zoomBy(1.25)">＋ ขยาย</button>
+  <button class="ctrl-btn" onclick="zoomBy(0.8)">－ ย่อ</button>
+  <button class="ctrl-btn" onclick="resetView()">⟳ Fit</button>
+</div>
+
+<div id="canvas-wrap">
+  <svg id="main-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+
+<div id="legend">
+  <div class="leg-title">ประเภท Node</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#334155;border:1px dashed #94A3B8"></div>วัตถุดิบ (Raw Material)</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#1E3A5F;"></div>อุปกรณ์ผลิต (Process Equip.)</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#1A2744;border:1px solid #4F8EE8"></div>ถังพัก / ถังรวม (Tank)</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#1E6FCC;"></div>AUTO DIPPING / Special</div>
+  <div class="leg-title" style="margin-top:4px;">โซน</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#1D4ED8;"></div>Zone A (ห้องหล่อ A, HP)</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#C2410C;"></div>Zone B (ห้องหล่อ B)</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#15803D;"></div>Zone C (ห้องหล่อ C, F)</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#854D0E;"></div>Zone D (ห้องหล่อ D)</div>
+</div>
+
+<div id="zoom-info">Scroll = Zoom · Drag = Pan</div>
+<div id="tooltip"></div>
+
+<script>
+// ════════════════════════════════════════════
+// COLOUR SYSTEM (dark-theme)
+// ════════════════════════════════════════════
+const C = {
+  ball:     { bg:'#0D2137', border:'#3B82F6', text:'#93C5FD', accent:'#3B82F6' },
+  sand:     { bg:'#200F00', border:'#F97316', text:'#FCA5A5', accent:'#F97316' },
+  feldspar: { bg:'#16073A', border:'#8B5CF6', text:'#C4B5FD', accent:'#8B5CF6' },
+  pitcher:  { bg:'#022C1A', border:'#10B981', text:'#6EE7B7', accent:'#10B981' },
+  dolomite: { bg:'#1A1400', border:'#EAB308', text:'#FDE68A', accent:'#EAB308' },
+  scrap:    { bg:'#1F0505', border:'#EF4444', text:'#FCA5A5', accent:'#EF4444' },
+  neutral:  { bg:'#161B22', border:'#30363D', text:'#8B949E', accent:'#30363D' },
+  accent:   { bg:'#0D2B5C', border:'#1E6FCC', text:'#93C5FD', accent:'#1E6FCC' },
+  zA:       { bg:'#0A1628', border:'#2563EB', text:'#93C5FD', accent:'#2563EB' },
+  zB:       { bg:'#1A0800', border:'#EA580C', text:'#FCA5A5', accent:'#EA580C' },
+  zC:       { bg:'#022008', border:'#16A34A', text:'#86EFAC', accent:'#16A34A' },
+  zD:       { bg:'#180E00', border:'#CA8A04', text:'#FDE68A', accent:'#CA8A04' },
+};
+
+// ════════════════════════════════════════════
+// NODE DEFINITIONS
+// x,y = CENTER of node
+// ════════════════════════════════════════════
+//
+// Column centers (x):
+//   Ball:     col0=80  col1=195  col2=310   (3 sub-cols for 3 tanks)
+//   Sand:     480, 600
+//   Feldspar: 760, 880
+//   Pitcher:  1040
+//   Dolomite: 1200, 1310
+//   Scrap:    1460
+//
+// Row centers (y):
+//   0  section titles   30
+//   1  raw materials    100
+//   2  equipment        210
+//   3  screening        310
+//   4  storage tanks    415
+//   5  collect tanks    520
+//   --- phase divider   580
+//   6  auto dipping     650
+//   --- bus             715
+//   7  blending tanks   780
+//   8  drain slip       880
+//   9  feeding tanks    980
+//   10 casting rooms    1090
+
+const NODES = [
+  // ── BALL SLIP ──────────────────────────────────────────
+  { id:'rm-kaolin',  label:'หินดินขาว\n(Kaolin)',       x:75,  y:100, w:115, h:46, type:'raw',  color:'ball',
+    tip:'วัตถุดิบหลัก ให้ความขาวและความแข็งแรง\nSiO₂ + Al₂O₃' },
+  { id:'rm-clay',    label:'ดินขาว\n(White Clay)',       x:205, y:100, w:115, h:46, type:'raw',  color:'ball',
+    tip:'ให้ plasticity และ binding\nช่วยขึ้นรูปชาม' },
+  { id:'rm-quartz',  label:'ควอทซ์\n(Quartz/Silica)',   x:75,  y:160, w:115, h:46, type:'raw',  color:'ball',
+    tip:'ลด shrinkage · เพิ่มความคงรูป\nSiO₂ บริสุทธิ์' },
+  { id:'rm-feld-b',  label:'ฟันม้า\n(Feldspar)',         x:205, y:160, w:115, h:46, type:'raw',  color:'ball',
+    tip:'Flux agent · ลด firing temp\nK₂O + Na₂O + Al₂O₃' },
+  { id:'bm-ball',    label:'⚙ Ball Mill\n(Wet Grinding · 12–16h)', x:140, y:258, w:180, h:52, type:'proc', color:'ball',
+    tip:'บดเปียก ด้วย Alumina Ball\nTarget: Residue 60M < 3%\nSp.Gr. ≈ 1.68–1.72' },
+  { id:'scr-ball',   label:'⛶ Vibro Screen\n60 Mesh',    x:140, y:342, w:155, h:44, type:'screen', color:'ball',
+    tip:'กรองเศษหยาบออก\nปล่อยผ่าน < 250 μm' },
+  { id:'tk-b1',      label:'🛢 ถังพัก\nBall #1',          x:60,  y:428, w:108, h:52, type:'tank', color:'ball' },
+  { id:'tk-b2',      label:'🛢 ถังพัก\nBall #2',          x:178, y:428, w:108, h:52, type:'tank', color:'ball' },
+  { id:'tk-b3',      label:'🛢 ถังพัก\nBall #3',          x:296, y:428, w:108, h:52, type:'tank', color:'ball' },
+  { id:'col-ball',   label:'◉ ถังรวม Ball Slip',          x:178, y:522, w:180, h:46, type:'collect', color:'ball',
+    tip:'ปรับค่า Viscosity V0/V30\nSp.Gr. 1.68–1.72 · pH 8–9' },
+
+  // ── SAND SLIP ─────────────────────────────────────────
+  { id:'rm-sand',    label:'ทราย\n(Silica Sand)',         x:460, y:100, w:115, h:46, type:'raw',  color:'sand',
+    tip:'SiO₂ > 98%\nให้ความแข็งแรงและลด warping' },
+  { id:'rm-soda',    label:'โซดาแอช\n(Soda Ash)',         x:590, y:100, w:115, h:46, type:'raw',  color:'sand',
+    tip:'Na₂CO₃ · ช่วย deflocculate\nทำให้น้ำดินไหลลื่นขึ้น' },
+  { id:'bm-sand',    label:'⚙ Ball Mill\n(Wet Grinding · 10–14h)', x:520, y:210, w:175, h:52, type:'proc', color:'sand',
+    tip:'บดเปียก · Target: 60M residue < 2%\nSp.Gr. ≈ 1.65–1.68' },
+  { id:'scr-sand',   label:'⛶ Vibro Screen\n60 Mesh',    x:520, y:310, w:150, h:44, type:'screen', color:'sand' },
+  { id:'tk-s1',      label:'🛢 ถังพัก\nSand #1',          x:460, y:415, w:108, h:52, type:'tank', color:'sand' },
+  { id:'tk-s2',      label:'🛢 ถังพัก\nSand #2',          x:580, y:415, w:108, h:52, type:'tank', color:'sand' },
+  { id:'col-sand',   label:'◉ ถังรวม Sand Slip',          x:520, y:522, w:175, h:46, type:'collect', color:'sand',
+    tip:'Sp.Gr. 1.65–1.68 · Viscosity < 25s' },
+
+  // ── FELDSPAR SLIP ─────────────────────────────────────
+  { id:'rm-fld',     label:'ฟันม้า\n(Feldspar)',           x:720, y:100, w:115, h:46, type:'raw',  color:'feldspar',
+    tip:'K-Feldspar · Al₂O₃·2SiO₂\nFlux ลด melting point' },
+  { id:'rm-wf',      label:'น้ำ\n(Water + Deflocc.)',      x:845, y:100, w:115, h:46, type:'raw',  color:'feldspar',
+    tip:'+ Sodium Silicate 0.3%\n+ Soda Ash 0.1%' },
+  { id:'bm-fld',     label:'⚙ Ball Mill\n(Fine Grinding · 16–20h)', x:780, y:210, w:175, h:52, type:'proc', color:'feldspar',
+    tip:'บดละเอียดกว่า Ball Slip\nTarget: 100M residue < 1%' },
+  { id:'scr-fld',    label:'⛶ Vibro Screen\n100 Mesh',    x:780, y:310, w:155, h:44, type:'screen', color:'feldspar',
+    tip:'กรองละเอียด 150 μm' },
+  { id:'tk-f1',      label:'🛢 ถังพัก\nFeldspar #1',       x:720, y:415, w:108, h:52, type:'tank', color:'feldspar' },
+  { id:'tk-f2',      label:'🛢 ถังพัก\nFeldspar #2',       x:840, y:415, w:108, h:52, type:'tank', color:'feldspar' },
+  { id:'col-fld',    label:'◉ ถังรวม Feldspar Slip',       x:780, y:522, w:185, h:46, type:'collect', color:'feldspar',
+    tip:'Sp.Gr. 1.70–1.75 · Viscosity 20–30s' },
+
+  // ── PITCHER SLIP ──────────────────────────────────────
+  { id:'rm-ptch',    label:'เศษชาม\n(Pitcher)',             x:1010,y:100, w:115, h:46, type:'raw',  color:'pitcher',
+    tip:'เศษชามจากกระบวนการ\nหรือชามที่ตำหนิ reject' },
+  { id:'rm-wp',      label:'น้ำ\n(Water)',                  x:1010,y:155, w:100, h:38, type:'raw',  color:'pitcher' },
+  { id:'proc-ptch',  label:'⚙ Crusher + Agitator\n(บด + ผสม)', x:1010,y:235, w:170, h:52, type:'proc', color:'pitcher',
+    tip:'บดหยาบ แล้วผสมกับน้ำ\nให้แตกออกก่อน screening' },
+  { id:'scr-ptch',   label:'⛶ Vibro Screen\n80 Mesh',      x:1010,y:320, w:148, h:44, type:'screen', color:'pitcher' },
+  { id:'tk-p1',      label:'🛢 ถังพัก\nPitcher',            x:1010,y:415, w:120, h:52, type:'tank', color:'pitcher' },
+  { id:'col-ptch',   label:'◉ ถังรวม Pitcher Slip',         x:1010,y:522, w:180, h:46, type:'collect', color:'pitcher',
+    tip:'Recycle เศษชาม → ลด waste\nใส่ประมาณ 5–8% ของสูตร' },
+
+  // ── DOLOMITE SLIP ─────────────────────────────────────
+  { id:'rm-dolom',   label:'โดโลไมต์\n(Dolomite)',          x:1195,y:100, w:120, h:46, type:'raw',  color:'dolomite',
+    tip:'CaMg(CO₃)₂ · ให้ whiteness\nลด sintering temperature' },
+  { id:'rm-wd',      label:'น้ำ\n(Water)',                  x:1325,y:100, w:90,  h:46, type:'raw',  color:'dolomite' },
+  { id:'proc-dolom', label:'⚙ Agitator\n(ผสมน้ำ ไม่บด)',   x:1255,y:210, w:165, h:52, type:'proc', color:'dolomite',
+    tip:'Dolomite ละลายน้ำได้ดี\nไม่ต้องผ่าน Ball Mill\nประหยัดพลังงาน' },
+  { id:'scr-dolom',  label:'⛶ Vibro Screen\n60 Mesh',      x:1255,y:310, w:145, h:44, type:'screen', color:'dolomite' },
+  { id:'tk-d1',      label:'🛢 ถังพัก\nDolomite',           x:1255,y:415, w:120, h:52, type:'tank', color:'dolomite' },
+  { id:'col-dolom',  label:'◉ ถังรวม Dolomite Slip',        x:1255,y:522, w:185, h:46, type:'collect', color:'dolomite',
+    tip:'Additive เพิ่มความขาว\nใส่ 2–4% ในถังผสมแต่ละโซน' },
+
+  // ── SCRAP SLIP ────────────────────────────────────────
+  { id:'rm-scrap',   label:'เศษงาน\n(Green/Fired Scrap)',   x:1490,y:100, w:130, h:46, type:'raw',  color:'scrap',
+    tip:'เศษงานดิบ (Green) หรือเผาแล้ว\nจากขั้นตอน casting, drying' },
+  { id:'proc-scrap', label:'⚙ Crusher + Wet Mix\n(บด + ฉีดน้ำ)', x:1490,y:210, w:165, h:52, type:'proc', color:'scrap',
+    tip:'บดหยาบ + ฉีดน้ำ\nหมุนวน 2–4h' },
+  { id:'scr-scrap',  label:'⛶ Vibro Screen\n60 Mesh',      x:1490,y:310, w:148, h:44, type:'screen', color:'scrap' },
+  { id:'tk-sc1',     label:'🛢 ถังพัก\nScrap',              x:1490,y:415, w:120, h:52, type:'tank', color:'scrap' },
+  { id:'col-scrap',  label:'◉ ถังรวม Scrap Slip ♻',        x:1490,y:522, w:185, h:46, type:'collect', color:'scrap',
+    tip:'♻ Recycle ลด waste 100%\nใส่ได้ถึง 10–15% ของสูตร\nต้องตรวจ Viscosity ก่อนใส่' },
+
+  // ── PHASE 2: CONVERGENCE ──────────────────────────────
+  { id:'auto-dip',   label:'🔄  AUTO DIPPING  —  ผสมสัดส่วน Body Slip (Ball : Sand : Feldspar : Pitcher)',
+    x:800, y:645, w:700, h:56, type:'special', color:'accent',
+    tip:'จุดรวม Slip ทั้ง 4 สูตรหลัก\nปรับสัดส่วนตาม Recipe ของแต่ละ Product Model\nควบคุม: Viscosity V0, V30 · Sp.Gr. · pH' },
+
+  // blending tanks (8 tanks, 2 per zone)
+  { id:'bld-a1', label:'🛢 ถังผสม A1\n(+ Dolomite + Scrap)', x:120, y:775, w:155, h:52, type:'tank', color:'zA',
+    tip:'ปรับ Sp.Gr. & Viscosity\nก่อนส่งห้องหล่อ Zone A' },
+  { id:'bld-a2', label:'🛢 ถังผสม A2\n(+ Dolomite + Scrap)', x:290, y:775, w:155, h:52, type:'tank', color:'zA' },
+  { id:'bld-b1', label:'🛢 ถังผสม B1\n(+ Dolomite + Scrap)', x:490, y:775, w:155, h:52, type:'tank', color:'zB' },
+  { id:'bld-b2', label:'🛢 ถังผสม B2\n(+ Dolomite + Scrap)', x:660, y:775, w:155, h:52, type:'tank', color:'zB' },
+  { id:'bld-c1', label:'🛢 ถังผสม C1\n(+ Dolomite + Scrap)', x:870, y:775, w:155, h:52, type:'tank', color:'zC' },
+  { id:'bld-c2', label:'🛢 ถังผสม C2\n(+ Dolomite + Scrap)', x:1040,y:775, w:155, h:52, type:'tank', color:'zC' },
+  { id:'bld-d1', label:'🛢 ถังผสม D1\n(+ Dolomite + Scrap)', x:1250,y:775, w:155, h:52, type:'tank', color:'zD' },
+  { id:'bld-d2', label:'🛢 ถังผสม D2\n(+ Dolomite + Scrap)', x:1420,y:775, w:155, h:52, type:'tank', color:'zD' },
+
+  // Drain Slip (ถังรวม finished slip per zone)
+  { id:'drn-a', label:'◉ Drain Slip — Zone A\n(ถังรวมน้ำดินสำเร็จ)', x:205, y:878, w:200, h:52, type:'collect', color:'zA',
+    tip:'น้ำดินสำเร็จรูปพร้อมหล่อ\nTarget: V0=18–22s · Sp.Gr.=1.72–1.76' },
+  { id:'drn-b', label:'◉ Drain Slip — Zone B\n(ถังรวมน้ำดินสำเร็จ)', x:575, y:878, w:200, h:52, type:'collect', color:'zB',
+    tip:'V0=20–24s · Sp.Gr.=1.72–1.76' },
+  { id:'drn-c', label:'◉ Drain Slip — Zone C\n(ถังรวมน้ำดินสำเร็จ)', x:955, y:878, w:200, h:52, type:'collect', color:'zC',
+    tip:'V0=18–22s · Sp.Gr.=1.72–1.76' },
+  { id:'drn-d', label:'◉ Drain Slip — Zone D\n(ถังรวมน้ำดินสำเร็จ)', x:1335,y:878, w:200, h:52, type:'collect', color:'zD',
+    tip:'V0=18–22s · Sp.Gr.=1.72–1.76' },
+
+  // Feeding Tanks
+  { id:'feed-a', label:'⬛ Feeding Tank A\n(จ่ายน้ำดิน Zone A)',  x:205, y:978, w:190, h:52, type:'feed', color:'zA',
+    tip:'ถังจ่ายอัตโนมัติ\nปั๊มน้ำดินเข้าห้องหล่อ\nควบคุมแรงดัน & อัตราไหล' },
+  { id:'feed-b', label:'⬛ Feeding Tank B\n(จ่ายน้ำดิน Zone B)',  x:575, y:978, w:190, h:52, type:'feed', color:'zB' },
+  { id:'feed-c', label:'⬛ Feeding Tank C\n(จ่ายน้ำดิน Zone C)',  x:955, y:978, w:190, h:52, type:'feed', color:'zC' },
+  { id:'feed-d', label:'⬛ Feeding Tank D\n(จ่ายน้ำดิน Zone D)',  x:1335,y:978, w:190, h:52, type:'feed', color:'zD' },
+
+  // ── PHASE 3: CASTING ROOMS ───────────────────────────
+  { id:'cast-a',  label:'🏭 ห้องหล่อ A',  x:100, y:1090, w:148, h:56, type:'cast', color:'zA',
+    tip:'Casting Room A\nหล่อด้วย Plaster Mold\nCasting Rate: 8–10 pcs/hr/mold' },
+  { id:'cast-hp', label:'🏭 ห้องหล่อ HP', x:308, y:1090, w:148, h:56, type:'cast', color:'zA',
+    tip:'High Pressure Casting Room\nHigh Pressure: 3–5 bar\nCycle Time สั้นกว่า 40–50%' },
+  { id:'cast-b',  label:'🏭 ห้องหล่อ B',  x:575, y:1090, w:148, h:56, type:'cast', color:'zB',
+    tip:'Casting Room B\nMold Cycle ≈ 60–90 min' },
+  { id:'cast-c',  label:'🏭 ห้องหล่อ C',  x:870, y:1090, w:148, h:56, type:'cast', color:'zC',
+    tip:'Casting Room C\nMold Cycle ≈ 60–90 min' },
+  { id:'cast-f',  label:'🏭 ห้องหล่อ F',  x:1040,y:1090, w:148, h:56, type:'cast', color:'zC',
+    tip:'Casting Room F (Fine)\nสำหรับ product ซับซ้อน' },
+  { id:'cast-d',  label:'🏭 ห้องหล่อ D',  x:1335,y:1090, w:148, h:56, type:'cast', color:'zD',
+    tip:'Casting Room D\nMold Cycle ≈ 60–90 min' },
+];
+
+// ════════════════════════════════════════════
+// EDGE DEFINITIONS
+// ════════════════════════════════════════════
+const EDGES = [
+  // Ball Slip
+  { f:'rm-kaolin', t:'bm-ball',  c:'ball' },
+  { f:'rm-clay',   t:'bm-ball',  c:'ball' },
+  { f:'rm-quartz', t:'bm-ball',  c:'ball' },
+  { f:'rm-feld-b', t:'bm-ball',  c:'ball' },
+  { f:'bm-ball',   t:'scr-ball', c:'ball' },
+  { f:'scr-ball',  t:'tk-b1',    c:'ball' },
+  { f:'scr-ball',  t:'tk-b2',    c:'ball' },
+  { f:'scr-ball',  t:'tk-b3',    c:'ball' },
+  { f:'tk-b1',     t:'col-ball', c:'ball' },
+  { f:'tk-b2',     t:'col-ball', c:'ball' },
+  { f:'tk-b3',     t:'col-ball', c:'ball' },
+  { f:'col-ball',  t:'auto-dip', c:'ball' },
+
+  // Sand Slip
+  { f:'rm-sand',   t:'bm-sand',  c:'sand' },
+  { f:'rm-soda',   t:'bm-sand',  c:'sand' },
+  { f:'bm-sand',   t:'scr-sand', c:'sand' },
+  { f:'scr-sand',  t:'tk-s1',    c:'sand' },
+  { f:'scr-sand',  t:'tk-s2',    c:'sand' },
+  { f:'tk-s1',     t:'col-sand', c:'sand' },
+  { f:'tk-s2',     t:'col-sand', c:'sand' },
+  { f:'col-sand',  t:'auto-dip', c:'sand' },
+
+  // Feldspar Slip
+  { f:'rm-fld',    t:'bm-fld',   c:'feldspar' },
+  { f:'rm-wf',     t:'bm-fld',   c:'feldspar' },
+  { f:'bm-fld',    t:'scr-fld',  c:'feldspar' },
+  { f:'scr-fld',   t:'tk-f1',    c:'feldspar' },
+  { f:'scr-fld',   t:'tk-f2',    c:'feldspar' },
+  { f:'tk-f1',     t:'col-fld',  c:'feldspar' },
+  { f:'tk-f2',     t:'col-fld',  c:'feldspar' },
+  { f:'col-fld',   t:'auto-dip', c:'feldspar' },
+
+  // Pitcher Slip
+  { f:'rm-ptch',   t:'proc-ptch', c:'pitcher' },
+  { f:'rm-wp',     t:'proc-ptch', c:'pitcher' },
+  { f:'proc-ptch', t:'scr-ptch',  c:'pitcher' },
+  { f:'scr-ptch',  t:'tk-p1',     c:'pitcher' },
+  { f:'tk-p1',     t:'col-ptch',  c:'pitcher' },
+  { f:'col-ptch',  t:'auto-dip',  c:'pitcher' },
+
+  // Dolomite → all blending tanks (additive)
+  { f:'rm-dolom',  t:'proc-dolom', c:'dolomite' },
+  { f:'rm-wd',     t:'proc-dolom', c:'dolomite' },
+  { f:'proc-dolom',t:'scr-dolom',  c:'dolomite' },
+  { f:'scr-dolom', t:'tk-d1',      c:'dolomite' },
+  { f:'tk-d1',     t:'col-dolom',  c:'dolomite' },
+  { f:'col-dolom', t:'bld-a1',     c:'dolomite', dash:true },
+  { f:'col-dolom', t:'bld-b1',     c:'dolomite', dash:true },
+  { f:'col-dolom', t:'bld-c1',     c:'dolomite', dash:true },
+  { f:'col-dolom', t:'bld-d1',     c:'dolomite', dash:true },
+
+  // Scrap → all blending tanks (recycle)
+  { f:'rm-scrap',   t:'proc-scrap', c:'scrap' },
+  { f:'proc-scrap', t:'scr-scrap',  c:'scrap' },
+  { f:'scr-scrap',  t:'tk-sc1',     c:'scrap' },
+  { f:'tk-sc1',     t:'col-scrap',  c:'scrap' },
+  { f:'col-scrap',  t:'bld-a2',     c:'scrap', dash:true },
+  { f:'col-scrap',  t:'bld-b2',     c:'scrap', dash:true },
+  { f:'col-scrap',  t:'bld-c2',     c:'scrap', dash:true },
+  { f:'col-scrap',  t:'bld-d2',     c:'scrap', dash:true },
+
+  // AUTO DIPPING → Blending Tanks
+  { f:'auto-dip', t:'bld-a1', c:'zA' },
+  { f:'auto-dip', t:'bld-a2', c:'zA' },
+  { f:'auto-dip', t:'bld-b1', c:'zB' },
+  { f:'auto-dip', t:'bld-b2', c:'zB' },
+  { f:'auto-dip', t:'bld-c1', c:'zC' },
+  { f:'auto-dip', t:'bld-c2', c:'zC' },
+  { f:'auto-dip', t:'bld-d1', c:'zD' },
+  { f:'auto-dip', t:'bld-d2', c:'zD' },
+
+  // Blending → Drain Slip
+  { f:'bld-a1', t:'drn-a', c:'zA' },
+  { f:'bld-a2', t:'drn-a', c:'zA' },
+  { f:'bld-b1', t:'drn-b', c:'zB' },
+  { f:'bld-b2', t:'drn-b', c:'zB' },
+  { f:'bld-c1', t:'drn-c', c:'zC' },
+  { f:'bld-c2', t:'drn-c', c:'zC' },
+  { f:'bld-d1', t:'drn-d', c:'zD' },
+  { f:'bld-d2', t:'drn-d', c:'zD' },
+
+  // Drain → Feeding Tanks
+  { f:'drn-a', t:'feed-a', c:'zA' },
+  { f:'drn-b', t:'feed-b', c:'zB' },
+  { f:'drn-c', t:'feed-c', c:'zC' },
+  { f:'drn-d', t:'feed-d', c:'zD' },
+
+  // Feeding → Casting Rooms
+  { f:'feed-a', t:'cast-a',  c:'zA' },
+  { f:'feed-a', t:'cast-hp', c:'zA' },
+  { f:'feed-b', t:'cast-b',  c:'zB' },
+  { f:'feed-c', t:'cast-c',  c:'zC' },
+  { f:'feed-c', t:'cast-f',  c:'zC' },
+  { f:'feed-d', t:'cast-d',  c:'zD' },
+];
+
+// ════════════════════════════════════════════
+// RENDER HELPERS
+// ════════════════════════════════════════════
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs={}) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k,v] of Object.entries(attrs)) e.setAttribute(k, v);
+  return e;
+}
+
+function nodeMap() {
+  const m = {};
+  NODES.forEach(n => m[n.id] = n);
+  return m;
+}
+
+const NMAP = nodeMap();
+
+// Compute SVG bounds
+const PAD = 60;
+const allX = NODES.map(n => [n.x - n.w/2, n.x + n.w/2]).flat();
+const allY = NODES.map(n => [n.y - n.h/2, n.y + n.h/2]).flat();
+const SVG_W = Math.max(...allX) + PAD;
+const SVG_H = Math.max(...allY) + PAD;
+
+// ── SECTION BACKGROUNDS ──
+function drawSectionBg(g) {
+  const sections = [
+    // Phase 1 per-slip backgrounds
+    { x1:20,   y1:58,  x2:375, y2:570, c:'ball',     label:'BALL SLIP' },
+    { x1:385,  y1:58,  x2:655, y2:570, c:'sand',     label:'SAND SLIP' },
+    { x1:665,  y1:58,  x2:905, y2:570, c:'feldspar', label:'FELDSPAR SLIP' },
+    { x1:915,  y1:58,  x2:1115,y2:570, c:'pitcher',  label:'PITCHER SLIP' },
+    { x1:1125, y1:58,  x2:1390,y2:570, c:'dolomite', label:'DOLOMITE SLIP' },
+    { x1:1400, y1:58,  x2:1640,y2:570, c:'scrap',    label:'SCRAP SLIP ♻' },
+    // Phase 2
+    { x1:20,   y1:610, x2:1640,y2:930, c:'neutral',  label:'PHASE 2 — AUTO DIPPING & ผสมสัดส่วน' },
+    // Phase 3 per zone
+    { x1:20,   y1:945, x2:440, y2:1162,c:'zA', label:'ZONE A' },
+    { x1:445,  y1:945, x2:730, y2:1162,c:'zB', label:'ZONE B' },
+    { x1:735,  y1:945, x2:1145,y2:1162,c:'zC', label:'ZONE C' },
+    { x1:1150, y1:945, x2:1510,y2:1162,c:'zD', label:'ZONE D' },
+  ];
+
+  sections.forEach(s => {
+    const col = C[s.c];
+    const rect = el('rect', {
+      x: s.x1, y: s.y1,
+      width: s.x2-s.x1, height: s.y2-s.y1,
+      rx: 12,
+      fill: col.bg,
+      stroke: col.border,
+      'stroke-width': 1,
+      'stroke-dasharray': '5 4',
+      opacity: 0.5,
+    });
+    g.appendChild(rect);
+
+    const txt = el('text', {
+      x: s.x1+12, y: s.y1+16,
+      'font-size': 10, 'font-weight': 700,
+      fill: col.accent, opacity: 0.8,
+      'font-family': 'Inter, sans-serif',
+    });
+    txt.textContent = s.label;
+    g.appendChild(txt);
+  });
+}
+
+// ── PHASE HEADER PILLS ──
+function drawPhaseHeaders(g) {
+  const pills = [
+    { x:800, y:34, label:'PHASE 1 — เตรียม Slip วัตถุดิบ 6 สูตร' },
+    { x:800, y:598, label:'PHASE 2 — AUTO DIPPING · ผสมสัดส่วน · จ่ายสู่โซน', highlight:true },
+    { x:780, y:932, label:'PHASE 3 — Drain Slip → Feeding Tank → ห้องหล่อ (Casting)' },
+  ];
+  pills.forEach(p => {
+    const tw = p.label.length * 7.5 + 24;
+    const bg = el('rect', {
+      x: p.x-tw/2, y: p.y-11,
+      width: tw, height: 22, rx: 11,
+      fill: p.highlight ? '#1E6FCC' : '#21262D',
+      stroke: p.highlight ? '#4F8EE8' : '#30363D',
+      'stroke-width': 1,
+    });
+    g.appendChild(bg);
+    const txt = el('text', {
+      x: p.x, y: p.y+1,
+      'text-anchor': 'middle', 'dominant-baseline': 'middle',
+      'font-size': 10.5, 'font-weight': 700,
+      fill: p.highlight ? '#E6EDF3' : '#8B949E',
+      'font-family': 'Inter, sans-serif',
+    });
+    txt.textContent = p.label;
+    g.appendChild(txt);
+  });
+}
+
+// ── EDGES ──
+function drawEdges(g) {
+  EDGES.forEach(edge => {
+    const fn = NMAP[edge.f], tn = NMAP[edge.t];
+    if (!fn || !tn) return;
+    const col = C[edge.c] || C.neutral;
+
+    // Source: bottom-center, Target: top-center
+    const sx = fn.x, sy = fn.y + fn.h/2;
+    const tx = tn.x, ty = tn.y - tn.h/2;
+    const dy = ty - sy;
+    const dx = tx - sx;
+
+    let d;
+    if (Math.abs(dx) < 8) {
+      // straight vertical
+      d = `M ${sx} ${sy} L ${tx} ${ty}`;
+    } else {
+      // S-curve
+      const c1y = sy + dy * 0.45;
+      const c2y = ty - dy * 0.45;
+      d = `M ${sx} ${sy} C ${sx} ${c1y}, ${tx} ${c2y}, ${tx} ${ty}`;
+    }
+
+    const markId = `arr-${edge.c}`;
+    const path = el('path', {
+      d,
+      fill: 'none',
+      stroke: col.accent,
+      'stroke-width': edge.dash ? 1.5 : 2,
+      'stroke-opacity': edge.dash ? 0.5 : 0.75,
+      'stroke-dasharray': edge.dash ? '5 4' : 'none',
+      'marker-end': `url(#${markId})`,
+    });
+    g.appendChild(path);
+  });
+}
+
+// ── NODES ──
+function drawNodes(g) {
+  NODES.forEach(n => {
+    const col = C[n.color] || C.neutral;
+    const x = n.x - n.w/2, y = n.y - n.h/2;
+    const r = n.type === 'cast' ? 10 : n.type === 'special' ? 10 : 7;
+
+    // Shadow
+    const shadow = el('rect', {
+      x: x+3, y: y+3, width: n.w, height: n.h, rx: r,
+      fill: 'rgba(0,0,0,0.35)',
+    });
+    g.appendChild(shadow);
+
+    // Box
+    const box = el('rect', {
+      x, y, width: n.w, height: n.h, rx: r,
+      fill: col.bg,
+      stroke: col.border,
+      'stroke-width': n.type === 'special' ? 2.5 : n.type === 'cast' ? 2 : 1.5,
+    });
+    g.appendChild(box);
+
+    // Special glow border
+    if (n.type === 'special') {
+      const glow = el('rect', {
+        x: x-2, y: y-2, width: n.w+4, height: n.h+4, rx: r+2,
+        fill: 'none',
+        stroke: col.accent,
+        'stroke-width': 1,
+        opacity: 0.3,
+      });
+      g.appendChild(glow);
+    }
+
+    // Type indicator stripe (left side)
+    const stripeH = Math.min(24, n.h - 8);
+    const stripe = el('rect', {
+      x: x+4, y: n.y - stripeH/2,
+      width: 3, height: stripeH, rx: 2,
+      fill: col.accent, opacity: 0.9,
+    });
+    g.appendChild(stripe);
+
+    // Text
+    const lines = n.label.split('\n');
+    const fBase = n.type === 'special' ? 12 : n.type === 'cast' ? 11.5 : 10.5;
+    const lh = fBase + 3.5;
+    const totalH = lines.length * lh;
+    const startY = n.y - totalH/2 + lh/2;
+
+    lines.forEach((line, i) => {
+      const t = el('text', {
+        x: n.x + 5,  // offset for stripe
+        y: startY + i*lh,
+        'text-anchor': 'middle',
+        'dominant-baseline': 'middle',
+        'font-size': i===0 ? fBase : fBase-1,
+        'font-weight': i===0 ? 700 : 400,
+        fill: col.text,
+        'font-family': 'Inter, Sarabun, sans-serif',
+      });
+      t.textContent = line;
+      g.appendChild(t);
+    });
+
+    // Invisible hover hit area
+    const hit = el('rect', {
+      x, y, width: n.w, height: n.h, rx: r,
+      fill: 'transparent',
+      'data-id': n.id,
+      style: 'cursor:pointer',
+    });
+    hit.addEventListener('mouseenter', (e) => {
+      box.setAttribute('stroke-width', '2.5');
+      box.setAttribute('stroke', '#E6EDF3');
+      if (n.tip) {
+        const tip = document.getElementById('tooltip');
+        tip.innerHTML = `<strong style="color:${col.accent};font-size:11px">${lines[0]}</strong><br><span style="color:#8B949E">${n.tip.replace(/\n/g,'<br>')}</span>`;
+        tip.style.display = 'block';
+      }
+    });
+    hit.addEventListener('mousemove', (e) => {
+      const tip = document.getElementById('tooltip');
+      tip.style.left = (e.clientX+16)+'px';
+      tip.style.top  = (e.clientY-8)+'px';
+    });
+    hit.addEventListener('mouseleave', () => {
+      box.setAttribute('stroke-width', n.type === 'special' ? '2.5' : n.type === 'cast' ? '2' : '1.5');
+      box.setAttribute('stroke', col.border);
+      document.getElementById('tooltip').style.display = 'none';
+    });
+    g.appendChild(hit);
+  });
+}
+
+// ── ARROW MARKERS ──
+function buildMarkers(defs) {
+  const markerColors = {
+    ball:     '#3B82F6',
+    sand:     '#F97316',
+    feldspar: '#8B5CF6',
+    pitcher:  '#10B981',
+    dolomite: '#EAB308',
+    scrap:    '#EF4444',
+    neutral:  '#6E7681',
+    accent:   '#4F8EE8',
+    zA:       '#2563EB',
+    zB:       '#EA580C',
+    zC:       '#16A34A',
+    zD:       '#CA8A04',
+  };
+  Object.entries(markerColors).forEach(([key, clr]) => {
+    const m = el('marker', {
+      id: `arr-${key}`,
+      viewBox: '0 0 10 10', refX: 8, refY: 5,
+      markerWidth: 7, markerHeight: 7,
+      orient: 'auto',
+    });
+    const p = el('path', { d: 'M 0 1 L 9 5 L 0 9 z', fill: clr });
+    m.appendChild(p);
+    defs.appendChild(m);
+  });
+}
+
+// ── MAIN RENDER ──
+function render() {
+  const svg = document.getElementById('main-svg');
+  svg.setAttribute('xmlns', NS);
+  svg.setAttribute('width', SVG_W + PAD);
+  svg.setAttribute('height', SVG_H + PAD);
+
+  // Defs
+  const defs = el('defs');
+  buildMarkers(defs);
+  svg.appendChild(defs);
+
+  // Groups (order matters)
+  const gBg    = el('g', { id:'g-bg' });
+  const gEdge  = el('g', { id:'g-edge' });
+  const gNode  = el('g', { id:'g-node' });
+  const gLabel = el('g', { id:'g-label' });
+  svg.append(gBg, gEdge, gNode, gLabel);
+
+  drawSectionBg(gBg);
+  drawPhaseHeaders(gLabel);
+  drawEdges(gEdge);
+  drawNodes(gNode);
+}
+
+render();
+
+// ════════════════════════════════════════════
+// PAN + ZOOM
+// ════════════════════════════════════════════
+let scale = 1, tx = 0, ty = 0;
+let panning = false, lastX = 0, lastY = 0;
+
+const wrap = document.getElementById('canvas-wrap');
+const svg  = document.getElementById('main-svg');
+
+function applyTransform() {
+  svg.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+  svg.style.transformOrigin = '0 0';
+  document.getElementById('zoom-info').textContent = `${Math.round(scale*100)}%  |  Scroll=Zoom · Drag=Pan`;
+}
+
+function zoomBy(f) {
+  scale = Math.min(Math.max(scale * f, 0.15), 4);
+  applyTransform();
+}
+
+function resetView() {
+  const vw = wrap.clientWidth, vh = wrap.clientHeight;
+  const fw = SVG_W + PAD, fh = SVG_H + PAD;
+  scale = Math.min(vw/fw, vh/fh) * 0.95;
+  tx = (vw - fw*scale)/2;
+  ty = (vh - fh*scale)/2;
+  applyTransform();
+}
+
+wrap.addEventListener('mousedown', e => {
+  panning = true; lastX = e.clientX; lastY = e.clientY;
+});
+wrap.addEventListener('mousemove', e => {
+  if (!panning) return;
+  tx += e.clientX - lastX;
+  ty += e.clientY - lastY;
+  lastX = e.clientX; lastY = e.clientY;
+  applyTransform();
+});
+wrap.addEventListener('mouseup',    () => { panning = false; });
+wrap.addEventListener('mouseleave', () => { panning = false; });
+
+wrap.addEventListener('wheel', e => {
+  e.preventDefault();
+  const r = wrap.getBoundingClientRect();
+  const mx = e.clientX - r.left, my = e.clientY - r.top;
+  const f = e.deltaY < 0 ? 1.12 : 0.89;
+  const ns = Math.min(Math.max(scale * f, 0.15), 4);
+  tx = mx - (mx - tx) * (ns/scale);
+  ty = my - (my - ty) * (ns/scale);
+  scale = ns;
+  applyTransform();
+}, { passive: false });
+
+// Touch support
+let lastDist = 0;
+wrap.addEventListener('touchstart', e => {
+  if (e.touches.length === 2) {
+    lastDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+  } else {
+    panning = true;
+    lastX = e.touches[0].clientX;
+    lastY = e.touches[0].clientY;
+  }
+}, { passive: true });
+
+wrap.addEventListener('touchmove', e => {
+  if (e.touches.length === 2) {
+    const d = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    zoomBy(d / lastDist);
+    lastDist = d;
+  } else if (panning) {
+    tx += e.touches[0].clientX - lastX;
+    ty += e.touches[0].clientY - lastY;
+    lastX = e.touches[0].clientX;
+    lastY = e.touches[0].clientY;
+    applyTransform();
+  }
+}, { passive: true });
+
+wrap.addEventListener('touchend', () => { panning = false; });
+
+// Init
+setTimeout(resetView, 80);
+</script>
+</body>
+</html>
