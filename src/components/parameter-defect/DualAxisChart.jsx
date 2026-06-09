@@ -3,22 +3,20 @@ import {
   Tooltip, Legend, ReferenceLine, ResponsiveContainer,
 } from 'recharts'
 import { useDashboard } from '../../context/DashboardContext'
-import { useMachineData } from '../../hooks/useMachineData'
+import { useParameterDefect } from '../../hooks/useParameterDefect'
 
-const PARAM_COLORS = {
+const PARAM_COLOR = {
   viscosity_v0:  '#4F8EE8',
   viscosity_v30: '#7C5CBF',
   temperature:   '#F59E0B',
   moisture:      '#10B981',
 }
-
-const PARAM_KEYS = {
-  viscosity_v0:  'viscosity',
-  viscosity_v30: 'viscosity',
-  temperature:   'temperature',
-  moisture:      'moisture',
+const PARAM_LABEL = {
+  viscosity_v0:  'Viscosity V0',
+  viscosity_v30: 'Viscosity V30',
+  temperature:   'Temperature',
+  moisture:      'Moisture %',
 }
-
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -31,7 +29,9 @@ const CustomTooltip = ({ active, payload, label }) => {
             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
             <span className="text-[var(--text-secondary)]">{entry.name}</span>
           </span>
-          <span className="font-bold tabular-nums text-[var(--text-primary)]">{entry.value?.toLocaleString()}</span>
+          <span className="font-bold tabular-nums text-[var(--text-primary)]">
+            {entry.value != null ? entry.value.toLocaleString() : '—'}
+          </span>
         </div>
       ))}
     </div>
@@ -40,74 +40,81 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function DualAxisChart() {
   const { selectedParameter } = useDashboard()
-  const { timeseries, ucl, lcl } = useMachineData()
+  const { chartData, ucl, lcl, loading } = useParameterDefect()
+
+  if (loading && chartData.length === 0) {
+    return (
+      <div className="h-[280px] w-full flex items-center justify-center">
+        <span className="text-[12px] text-[var(--text-secondary)] animate-pulse">Loading chart data…</span>
+      </div>
+    )
+  }
+
+  if (!loading && chartData.length === 0) {
+    return (
+      <div className="h-[280px] w-full flex items-center justify-center">
+        <span className="text-[12px] text-[var(--text-secondary)]">No data for selected range</span>
+      </div>
+    )
+  }
 
   return (
     <div className="h-[280px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={timeseries} margin={{ top: 8, right: 16, left: -8, bottom: 0 }}>
+        <ComposedChart data={chartData} margin={{ top: 8, right: 16, left: -8, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.6} />
           <XAxis
-            dataKey="hour"
+            dataKey="label"
             tick={{ fontSize: 10, fill: 'var(--text-secondary)', fontFamily: 'Inter' }}
             tickLine={false}
             axisLine={{ stroke: 'var(--border)' }}
+            interval="preserveStartEnd"
           />
           <YAxis
             yAxisId="param"
             orientation="left"
             tick={{ fontSize: 10, fill: 'var(--text-secondary)', fontFamily: 'Inter' }}
-            tickLine={false}
-            axisLine={false}
-            width={40}
+            tickLine={false} axisLine={false} width={40}
           />
           <YAxis
             yAxisId="defect"
             orientation="right"
             tick={{ fontSize: 10, fill: 'var(--text-secondary)', fontFamily: 'Inter' }}
-            tickLine={false}
-            axisLine={false}
-            width={40}
+            tickLine={false} axisLine={false} width={40}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
+          <Legend verticalAlign="top" height={36} iconType="circle"
+            wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
 
-          {/* UCL/LCL for first selected param */}
-          {selectedParameter.includes('viscosity_v0') && (
+          {/* UCL/LCL reference lines for first selected param */}
+          {selectedParameter.includes('viscosity_v0') && ucl.viscosity_v0 && (
             <>
-              <ReferenceLine yAxisId="param" y={ucl.viscosity} stroke="#DC2626" strokeDasharray="4 4" strokeWidth={1.5} label={{ value: 'UCL', position: 'right', fontSize: 9, fill: '#DC2626' }} />
-              <ReferenceLine yAxisId="param" y={lcl.viscosity} stroke="#D97706" strokeDasharray="4 4" strokeWidth={1.5} label={{ value: 'LCL', position: 'right', fontSize: 9, fill: '#D97706' }} />
+              <ReferenceLine yAxisId="param" y={ucl.viscosity_v0} stroke="#DC2626" strokeDasharray="4 4" strokeWidth={1.5}
+                label={{ value: 'UCL', position: 'right', fontSize: 9, fill: '#DC2626' }} />
+              <ReferenceLine yAxisId="param" y={lcl.viscosity_v0} stroke="#D97706" strokeDasharray="4 4" strokeWidth={1.5}
+                label={{ value: 'LCL', position: 'right', fontSize: 9, fill: '#D97706' }} />
             </>
           )}
 
-          {/* Defect Bar */}
-          <Bar
-            yAxisId="defect"
-            dataKey="defect"
-            name="Defect Count"
-            fill="#FCA5A5"
-            opacity={0.7}
-            radius={[2, 2, 0, 0]}
-          />
+          {/* Defect bar (right Y-axis) */}
+          <Bar yAxisId="defect" dataKey="defect" name="Defect Count"
+            fill="#FCA5A5" opacity={0.75} radius={[2, 2, 0, 0]} />
 
-          {/* Parameter Lines */}
-          {selectedParameter.map(pk => {
-            const dataKey = PARAM_KEYS[pk] || pk
-            const color = PARAM_COLORS[pk] || '#4F8EE8'
-            return (
-              <Line
-                key={pk}
-                yAxisId="param"
-                type="monotone"
-                dataKey={dataKey}
-                name={pk.replace('_', ' ').toUpperCase()}
-                stroke={color}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 5, fill: color }}
-              />
-            )
-          })}
+          {/* Parameter lines (left Y-axis) */}
+          {(selectedParameter || []).map(pk => (
+            <Line
+              key={pk}
+              yAxisId="param"
+              type="monotone"
+              dataKey={pk}
+              name={PARAM_LABEL[pk] ?? pk}
+              stroke={PARAM_COLOR[pk] ?? '#4F8EE8'}
+              strokeWidth={2}
+              dot={false}
+              connectNulls={false}
+              activeDot={{ r: 5, fill: PARAM_COLOR[pk] ?? '#4F8EE8' }}
+            />
+          ))}
         </ComposedChart>
       </ResponsiveContainer>
     </div>

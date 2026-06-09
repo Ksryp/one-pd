@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.api.routers import health, pipeline, overview, notifications, yield_, metrics, ws, machine, alerts_mgmt
+from app.api.routers import health, pipeline, overview, notifications, yield_, metrics, ws, machine, alerts_mgmt, defect_chart
 
 app = FastAPI(
     title="SNK MES API",
@@ -29,3 +29,4 @@ app.include_router(metrics.router)
 app.include_router(ws.router)
 app.include_router(machine.router)
 app.include_router(alerts_mgmt.router)
+app.include_router(defect_chart.router)
