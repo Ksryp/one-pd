@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react'
 import { useDashboard } from '../../context/DashboardContext'
 import { api } from '../../services/api'
 
-const USE_API = import.meta.env.VITE_USE_API === 'true'
-
 const PARAMETERS = [
   { key: 'viscosity_v0',  label: 'Viscosity V0'    },
   { key: 'viscosity_v30', label: 'Viscosity V30'   },
@@ -66,7 +64,6 @@ export default function FilterBar() {
 
   // Load models + defect types from DB
   useEffect(() => {
-    if (!USE_API) return
     api.get('/api/meta/models').then(d => setModelOptions(d)).catch(() => {})
     api.get('/api/meta/defect-types').then(d => setDefectOptions(d)).catch(() => {})
   }, [])
