@@ -1,12 +1,18 @@
 import AlertCard from './AlertCard'
 import YieldDonut from '../yield/YieldDonut'
-import { notifications, yield_, metrics } from '../../data/mock'
 import { useState } from 'react'
+import { useNotifications } from '../../hooks/useNotifications'
+import { useYield } from '../../hooks/useYield'
+import { useMetrics } from '../../hooks/useMetrics'
 
 const VIEWS = ['Day', 'Week', 'Month', 'Year']
 
 export default function NotificationPanel() {
   const [yieldView, setYieldView] = useState('Day')
+  const { data: notifications } = useNotifications()
+  const { data: clayYield }    = useYield('clay')
+  const { data: firingYield }  = useYield('firing')
+  const { data: metrics }      = useMetrics()
   const unresolved = notifications.filter(n => !n.resolved).length
 
   return (
@@ -34,15 +40,11 @@ export default function NotificationPanel() {
       {/* Clay Yield */}
       <div className="mb-5">
         <YieldDonut
-          title="Clay Yield"
+          title={clayYield.title}
           headerAction={<ViewSelector value={yieldView} onChange={setYieldView} />}
-          value={yield_.clay.value}
-          segments={[
-            { label: 'Good',   value: yield_.clay.good,   color: '#16A34A' },
-            { label: 'Repair', value: yield_.clay.repair, color: '#D97706' },
-            { label: 'Scrap',  value: yield_.clay.scrap,  color: '#DC2626' },
-          ]}
-          target={yield_.clay.target}
+          value={clayYield.value}
+          segments={clayYield.segments}
+          target={clayYield.target}
         />
       </div>
 
@@ -51,15 +53,11 @@ export default function NotificationPanel() {
       {/* Firing Yield */}
       <div className="mb-5">
         <YieldDonut
-          title="Firing Yield"
+          title={firingYield.title}
           headerAction={<ViewSelector value={yieldView} onChange={setYieldView} />}
-          value={yield_.firing.value}
-          segments={[
-            { label: 'Good',   value: yield_.firing.good,   color: '#16A34A' },
-            { label: 'Repair', value: yield_.firing.repair, color: '#D97706' },
-            { label: 'Scrap',  value: yield_.firing.scrap,  color: '#DC2626' },
-          ]}
-          target={yield_.firing.target}
+          value={firingYield.value}
+          segments={firingYield.segments}
+          target={firingYield.target}
         />
       </div>
 

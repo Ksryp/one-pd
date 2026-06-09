@@ -3,7 +3,7 @@ import {
   Tooltip, Legend, ReferenceLine, ResponsiveContainer,
 } from 'recharts'
 import { useDashboard } from '../../context/DashboardContext'
-import { parameterDefect } from '../../data/mock'
+import { useMachineData } from '../../hooks/useMachineData'
 
 const PARAM_COLORS = {
   viscosity_v0:  '#4F8EE8',
@@ -40,7 +40,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function DualAxisChart() {
   const { selectedParameter } = useDashboard()
-  const { timeseries, ucl, lcl } = parameterDefect
+  const { timeseries, ucl, lcl } = useMachineData()
 
   return (
     <div className="h-[280px] w-full">

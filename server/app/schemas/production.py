@@ -76,11 +76,55 @@ class YieldOut(BaseModel):
 
 
 # ── Metrics ───────────────────────────────────────────────────────────────────
-class MetricItem(BaseModel):
+class SlipInItem(BaseModel):
+    pieces: int
+    kg: float
+
+class SlipYieldItem(BaseModel):
     value: float
-    unit: str
+    target: float
 
 class MetricsOut(BaseModel):
-    slipIn: MetricItem
-    slipYield: MetricItem
-    warehouseIn: MetricItem
+    slipIn: SlipInItem
+    slipYield: SlipYieldItem
+    warehouseIn: SlipInItem
+
+
+# ── Defect summary ────────────────────────────────────────────────────────────
+class DefectItem(BaseModel):
+    type: str
+    count: int
+
+class DefectSummary(BaseModel):
+    items: list[DefectItem]
+    days: int
+
+
+# ── Machine data ──────────────────────────────────────────────────────────────
+class MachineLatest(BaseModel):
+    time: str | None
+    MCRIM: float | None
+    MCENG: float | None
+    MCSKR: float | None
+    MAP: float | None
+    VolST: float | None
+    STemp: float | None
+    WTemp: float | None
+    CT_AVG_Cur: float | None
+    CT_MC_Cur: float | None
+    ClayGood: float | None
+
+class MachinePoint(BaseModel):
+    hour: str
+    viscosity: float | None
+    viscosity_v30: float | None
+    temperature: float | None
+    moisture: float | None
+    mcrim: float | None
+    mceng: float | None
+    map_val: float | None
+    samples: int
+
+class MachineTimeseries(BaseModel):
+    points: list[MachinePoint]
+    has_data: bool

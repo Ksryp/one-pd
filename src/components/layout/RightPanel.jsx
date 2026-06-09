@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useDashboard } from '../../context/DashboardContext'
-import { notifications } from '../../data/mock'
+import { useNotifications } from '../../hooks/useNotifications'
 
 export default function RightPanel({ children }) {
   const { rightPanelOpen, setRightPanelOpen } = useDashboard()
+  const { data: notifications } = useNotifications()
   const unresolvedCount = notifications.filter(n => !n.resolved).length
   const hasUnresolved = unresolvedCount > 0
   const [isMobile, setIsMobile] = useState(false)

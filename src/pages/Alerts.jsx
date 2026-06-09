@@ -1,19 +1,27 @@
-import { notifications } from '../data/mock'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { STATUS_COLORS as LEVEL_MAP } from '../constants/status'
+import { useNotifications } from '../hooks/useNotifications'
+import { api } from '../services/api'
 
+const USE_API = import.meta.env.VITE_USE_API === 'true'
 const STAGES = ['All', 'slip-prep', 'glaze-prep', 'casting', 'drying', 'spraying', 'firing']
 
 export default function Alerts() {
   const navigate = useNavigate()
   const [filter, setFilter] = useState('All')
-  const [alerts, setAlerts] = useState(notifications)
+  const { data: liveAlerts } = useNotifications()
+  const [alerts, setAlerts] = useState([])
+
+  useEffect(() => { setAlerts(liveAlerts) }, [liveAlerts])
 
   const filtered = filter === 'All' ? alerts : alerts.filter(a => a.stage === filter)
 
-  const resolve = (id) => {
+  const resolve = async (id) => {
     setAlerts(prev => prev.map(a => a.id === id ? { ...a, resolved: true } : a))
+    if (USE_API) {
+      try { await api.patch(`/api/alerts/${id}/resolve`) } catch (_) {}
+    }
   }
 
   return (
