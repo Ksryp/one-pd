@@ -13,8 +13,14 @@ python3 -m venv "$SERVER_DIR/venv"
 "$SERVER_DIR/venv/bin/pip" install --quiet -r "$SERVER_DIR/requirements.txt"
 
 # ── 2. Docker + containers (TimescaleDB + PostgreSQL) ──────────────
-echo "==> [2/6] Enabling Docker and starting DB containers..."
+echo "==> [2/6] Installing Docker and starting DB containers..."
+if ! command -v docker &>/dev/null; then
+    echo "    Docker not found — installing..."
+    sudo apt-get update -qq
+    sudo apt-get install -y docker.io docker-compose-v2
+fi
 sudo systemctl enable docker
+sudo systemctl start docker
 cd /home/surayutp/mqtt-tsdb && docker compose up -d
 echo "    Waiting 5s for DBs to be ready..."
 sleep 5
