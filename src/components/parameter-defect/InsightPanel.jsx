@@ -1,16 +1,42 @@
 import { Fragment, useState } from 'react'
-import { parameterDefect } from '../../data/mock'
+import { useDashboard } from '../../context/DashboardContext'
+import { getParameterDefectInsights } from '../../data/parameterDefectSort'
 
 export default function InsightPanel() {
-  const { insights } = parameterDefect
-  const { peakDefect, paramAtPeak, correlation, totalDefect } = insights
+  const { pdSortBy, pdSortDir, setPdSort } = useDashboard()
+  const { peakDefect, paramAtPeak, correlation, totalDefect } = getParameterDefectInsights({
+    sortBy: pdSortBy,
+    sortDir: pdSortDir,
+  })
 
   return (
     // 2-col grid when stacked (below lg), single col when side panel (lg+)
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 h-full">
       {/* Peak Defect */}
       <InsightCard title="Peak Defect" hoverColor="#DC2626">
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-1">
+        {/* Column headers — click to sort */}
+        <div className="grid grid-cols-2 gap-x-3 mt-2 mb-1">
+          {[
+            { field: 'name',     label: 'Type'      },
+            { field: 'count',    label: 'Count'     },
+            { field: 'subType',  label: 'Sub Type'  },
+            { field: 'subCount', label: 'Sub Count' },
+          ].map(col => (
+            <button
+              key={col.field}
+              onClick={() => setPdSort(col.field)}
+              className={`flex items-center gap-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors
+                hover:text-[var(--accent)]
+                ${pdSortBy === col.field ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'}`}
+            >
+              {col.label}
+              {pdSortBy === col.field && (
+                <span className="text-[9px]">{pdSortDir === 'asc' ? '▲' : '▼'}</span>
+              )}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-1">
           {peakDefect.byType.map((t) => (
             <Fragment key={t.name}>
               <div className="flex items-center justify-between">

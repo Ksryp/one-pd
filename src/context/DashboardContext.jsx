@@ -10,6 +10,8 @@ export function DashboardProvider({ children }) {
   const [selectedModel, setSelectedModel] = useState(['All'])
   const [selectedView, setSelectedView] = useState('hour')
   const [rightPanelOpen, setRightPanelOpen] = useState(false)
+  const [pdSortBy, setPdSortBy] = useState('count')
+  const [pdSortDir, setPdSortDir] = useState('desc')
 
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light'
@@ -35,6 +37,15 @@ export function DashboardProvider({ children }) {
       setSelectedView,
       rightPanelOpen,
       setRightPanelOpen,
+      pdSortBy,
+      pdSortDir,
+      setPdSort: (field) => {
+        setPdSortBy(prev => {
+          if (prev === field) setPdSortDir(d => d === 'asc' ? 'desc' : 'asc')
+          else { setPdSortDir('desc'); return field }
+          return prev
+        })
+      },
     }}>
       {children}
     </DashboardContext.Provider>

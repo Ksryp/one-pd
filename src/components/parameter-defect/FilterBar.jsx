@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useDashboard } from '../../context/DashboardContext'
+import { SORT_CONFIG } from '../../data/parameterDefectSort'
 
 const PARAMETERS = [
   { key: 'viscosity_v0',  label: 'Viscosity V0'  },
@@ -31,13 +32,15 @@ const VIEWS   = ['1H', '4H', '8H', 'Day', 'Week', 'Month', 'Year']
 export default function FilterBar() {
   const { selectedParameter, setSelectedParameter, selectedDefect, setSelectedDefect,
           selectedModel, setSelectedModel, selectedView, setSelectedView,
-          selectedDate, setSelectedDate } = useDashboard()
+          selectedDate, setSelectedDate,
+          pdSortBy, pdSortDir, setPdSort } = useDashboard()
 
   const [paramOpen, setParamOpen] = useState(false)
   const [defectOpen, setDefectOpen] = useState(false)
   const [modelOpen, setModelOpen] = useState(false)
   const [viewOpen, setViewOpen]   = useState(false)
   const [dateOpen, setDateOpen]   = useState(false)
+  const [sortOpen, setSortOpen]   = useState(false)
 
   // Parse initial dates from selectedDate or use today
   const todayStr = new Date().toISOString().split('T')[0]
@@ -144,6 +147,34 @@ export default function FilterBar() {
             className={`w-full text-left px-3 py-1.5 text-[12px] rounded hover:bg-[var(--accent-light)] hover:text-[var(--accent)] transition-colors
               ${selectedView === v.toLowerCase() ? 'text-[var(--accent)] font-bold bg-[var(--accent-light)]' : 'text-[var(--text-primary)]'}`}>
             {v}
+          </button>
+        ))}
+      </DropdownFilter>
+
+      {/* Sort */}
+      <DropdownFilter
+        label="Sort"
+        display={
+          <span className="flex items-center gap-1">
+            {SORT_CONFIG.find(c => c.field === pdSortBy)?.label ?? 'Count'}
+            <span className="text-[10px] font-black">{pdSortDir === 'asc' ? '▲' : '▼'}</span>
+          </span>
+        }
+        open={sortOpen}
+        setOpen={setSortOpen}
+      >
+        {SORT_CONFIG.map(cfg => (
+          <button
+            key={cfg.field}
+            onClick={() => { setPdSort(cfg.field); setSortOpen(false) }}
+            className={`w-full text-left px-3 py-1.5 text-[12px] rounded flex items-center justify-between
+              hover:bg-[var(--accent-light)] hover:text-[var(--accent)] transition-colors
+              ${pdSortBy === cfg.field ? 'text-[var(--accent)] font-bold bg-[var(--accent-light)]' : 'text-[var(--text-primary)]'}`}
+          >
+            <span>{cfg.label}</span>
+            {pdSortBy === cfg.field && (
+              <span className="text-[10px] font-black">{pdSortDir === 'asc' ? '▲' : '▼'}</span>
+            )}
           </button>
         ))}
       </DropdownFilter>
