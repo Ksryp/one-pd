@@ -8,6 +8,20 @@ dist/
 .env
 .env.local
 .env.*.local
+!.env.example
+
+# Large data files — tracked via Git LFS (see .gitattributes)
+# qrcode_snk.json is handled by LFS, not ignored
+
+# Backend
+server/venv/
+server/.env
+server/.env.local
+!server/.env.example
+server/**/__pycache__/
+server/**/*.pyc
+server/**/*.pyo
+server/.pytest_cache/
 
 # Editor
 .vscode/

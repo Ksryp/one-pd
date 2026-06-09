@@ -1,0 +1,18 @@
+# Named Tunnel config (future use — when you have a custom domain)
+# Gives a stable URL instead of a random trycloudflare.com subdomain
+#
+# Setup steps:
+#   cloudflared tunnel login
+#   cloudflared tunnel create snk-mes
+#   cloudflared tunnel route dns snk-mes api.yourdomain.com
+#
+# Then replace cloudflared.service ExecStart with:
+#   ExecStart=/usr/local/bin/cloudflared tunnel run --config /home/surayutp/.cloudflared/config.yml snk-mes
+
+tunnel: <TUNNEL_UUID>
+credentials-file: /home/surayutp/.cloudflared/<TUNNEL_UUID>.json
+
+ingress:
+  - hostname: api.yourdomain.com
+    service: http://localhost:8000
+  - service: http_status:404

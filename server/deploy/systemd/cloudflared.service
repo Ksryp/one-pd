@@ -1,0 +1,16 @@
+[Unit]
+Description=Cloudflare Tunnel — Quick Tunnel for SNK MES API
+After=network-online.target snk-mes-api.service
+Requires=snk-mes-api.service
+
+[Service]
+Type=simple
+User=surayutp
+ExecStart=/usr/local/bin/cloudflared tunnel --url http://localhost:8000 --no-autoupdate
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,25 @@
+[Unit]
+Description=SNK MES FastAPI Backend
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+User=surayutp
+Group=surayutp
+WorkingDirectory=/home/surayutp/one-pd/server
+EnvironmentFile=/home/surayutp/one-pd/server/.env
+ExecStart=/home/surayutp/one-pd/server/venv/bin/gunicorn app.main:app \
+    -w 2 \
+    -k uvicorn.workers.UvicornWorker \
+    --bind 0.0.0.0:8000 \
+    --access-logfile - \
+    --error-logfile -
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

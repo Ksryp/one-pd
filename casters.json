@@ -1,0 +1,1367 @@
+[
+  {
+    "id": 1,
+    "employee_id": "000001",
+    "caster_id": "0096",
+    "name": "นายประสิทธิ์ สุพรรณา",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 2,
+    "employee_id": "000002",
+    "caster_id": "141",
+    "name": "นายขวัญยืน ตะเพียนทอง",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 3,
+    "employee_id": "000003",
+    "caster_id": "200",
+    "name": "นายอภิรักษ์ โสรัปวาสี",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 4,
+    "employee_id": "000004",
+    "caster_id": "267",
+    "name": "นายแสงดาว แก้ววัน",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 5,
+    "employee_id": "000005",
+    "caster_id": "280",
+    "name": "นายประทวน ศรีนิล",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 6,
+    "employee_id": "000006",
+    "caster_id": "332",
+    "name": "นายประสาท สุขหลง",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 7,
+    "employee_id": "000007",
+    "caster_id": "352",
+    "name": "นายกิตติศักดิ์ ประดู่",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 8,
+    "employee_id": "000008",
+    "caster_id": "353",
+    "name": "นายประภาส หลักหาญ",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 9,
+    "employee_id": "000009",
+    "caster_id": "408",
+    "name": "นายอดิศักดิ์ พระเทศ",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 10,
+    "employee_id": "000010",
+    "caster_id": "425",
+    "name": "นายศราวุฒิ บุศย์สะสม",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 11,
+    "employee_id": "000011",
+    "caster_id": "448",
+    "name": "นายสุทัศ สุขสดม",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 12,
+    "employee_id": "000012",
+    "caster_id": "545",
+    "name": "นายเกรียงสิทธิ์ โพธิ์สังข์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 13,
+    "employee_id": "000013",
+    "caster_id": "650",
+    "name": "นายสันติชัย โทรเดช",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 14,
+    "employee_id": "000014",
+    "caster_id": "662",
+    "name": "นายนฤดม ฟักขาว",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 15,
+    "employee_id": "000015",
+    "caster_id": "698",
+    "name": "นายบรรพต เตรียมล้ำเลิศ",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 16,
+    "employee_id": "000016",
+    "caster_id": "777",
+    "name": "นายศุภชัย อินทะกุล",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 17,
+    "employee_id": "000017",
+    "caster_id": "831",
+    "name": "สมจิตร แก้วสมบัติ",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 18,
+    "employee_id": "000018",
+    "caster_id": "906",
+    "name": "นายสมัย ศรีมะโน",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 19,
+    "employee_id": "000019",
+    "caster_id": "939",
+    "name": "นเรศ บุญประเสริฐ",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 20,
+    "employee_id": "000020",
+    "caster_id": "961",
+    "name": "นายวิโรจน์ สุวรรณรัตน์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 21,
+    "employee_id": "000021",
+    "caster_id": "1016",
+    "name": "นายอดิสรณ์ ปัญจรี",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 22,
+    "employee_id": "000022",
+    "caster_id": "1179",
+    "name": "นายสุทัศน์ สุทธิชัง",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 23,
+    "employee_id": "000023",
+    "caster_id": "1225",
+    "name": "ชาญณรงค์ คำมี",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 24,
+    "employee_id": "000024",
+    "caster_id": "1291",
+    "name": "นายทองพูล ศิริรัตน์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 25,
+    "employee_id": "000025",
+    "caster_id": "1327",
+    "name": "นายทวี อินทร์ทอง",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 26,
+    "employee_id": "000026",
+    "caster_id": "1393",
+    "name": "นายพงษ์ธวัช ทะวงษ์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 27,
+    "employee_id": "000027",
+    "caster_id": "1395",
+    "name": "นายสุริยา เพ็ชรากูล",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 28,
+    "employee_id": "000028",
+    "caster_id": "1501",
+    "name": "นายนวีสันติ์ สอนสวัสดิ์",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 29,
+    "employee_id": "000029",
+    "caster_id": "1512",
+    "name": "นายอดุลย์ อินทร์สมบัติ",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 30,
+    "employee_id": "000030",
+    "caster_id": "1543",
+    "name": "นายณรงค์ คงสมบูรณ์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 31,
+    "employee_id": "000031",
+    "caster_id": "1591",
+    "name": "นายสุรสิทธิ์ สิงห์เพ็ชร",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 32,
+    "employee_id": "000032",
+    "caster_id": "1606",
+    "name": "นายพิชิต โพธิ์ศิริ",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 33,
+    "employee_id": "000033",
+    "caster_id": "1650",
+    "name": "นายสำเริง ใจเย็น",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 34,
+    "employee_id": "000034",
+    "caster_id": "1716",
+    "name": "นายพงษ์พัฒน์ เลาห์สิงห์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 35,
+    "employee_id": "000035",
+    "caster_id": "1779",
+    "name": "นายไพบูล รับความสุข",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 36,
+    "employee_id": "000036",
+    "caster_id": "1821",
+    "name": "ชาติสยาม ขุนสมจิตร",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 37,
+    "employee_id": "000037",
+    "caster_id": "1829",
+    "name": "ลำแพน เปลี่ยนสอาด",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 38,
+    "employee_id": "000038",
+    "caster_id": "1833",
+    "name": "นายพงษ์พันธ์ ทิพย์ศักดิ์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 39,
+    "employee_id": "000039",
+    "caster_id": "1834",
+    "name": "นายลำพวน เปลี่ยนสอาด",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 40,
+    "employee_id": "000040",
+    "caster_id": "2054",
+    "name": "นายนกแก้ว มาลิแก้ว",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 41,
+    "employee_id": "000041",
+    "caster_id": "2056",
+    "name": "นายสุรเชษฐ์ กันหริ",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 42,
+    "employee_id": "000042",
+    "caster_id": "2165",
+    "name": "นายศราวุธ ธานีรัตน์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 43,
+    "employee_id": "000043",
+    "caster_id": "2202",
+    "name": "นายไกรสร สินสระน้อย",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 44,
+    "employee_id": "000044",
+    "caster_id": "2218",
+    "name": "นายเชาวลิต สายทองคำ",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 45,
+    "employee_id": "000045",
+    "caster_id": "2237",
+    "name": "นายยอดชาย สากลาง",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 46,
+    "employee_id": "000046",
+    "caster_id": "2282",
+    "name": "นายเกรียงศักดิ์ ตรีกูด",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 47,
+    "employee_id": "000047",
+    "caster_id": "2326",
+    "name": "นายขวันชัย ฉอ้อนโฉม",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 48,
+    "employee_id": "000048",
+    "caster_id": "2365",
+    "name": "นายฉกาจ เมฆวัน",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 49,
+    "employee_id": "000049",
+    "caster_id": "2369",
+    "name": "สรศักดิ์ ขุนทด",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 50,
+    "employee_id": "000050",
+    "caster_id": "2379",
+    "name": "นายศักดา ทาสูงเนิน",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 51,
+    "employee_id": "000051",
+    "caster_id": "2387",
+    "name": "นายศราวุธ มีเพียร",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 52,
+    "employee_id": "000052",
+    "caster_id": "2403",
+    "name": "นายฐาปกรณ์ เกตุแก้ว",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 53,
+    "employee_id": "000053",
+    "caster_id": "2416",
+    "name": "ภัคณรัช อยู่สอาด",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 54,
+    "employee_id": "000054",
+    "caster_id": "2509",
+    "name": "นายมานะ รัตนกสิกร",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 55,
+    "employee_id": "000055",
+    "caster_id": "2516",
+    "name": "ประกร ดีแป้น",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 56,
+    "employee_id": "000056",
+    "caster_id": "2523",
+    "name": "นายวีรวัฒน์ ปานผึ้ง",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 57,
+    "employee_id": "000057",
+    "caster_id": "2530",
+    "name": "นายพรชัย ตู้พิมาย",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 58,
+    "employee_id": "000058",
+    "caster_id": "2535",
+    "name": "นายณัฐพล  นาคคลัง",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 59,
+    "employee_id": "000059",
+    "caster_id": "2559",
+    "name": "นายศิริพงษ์ กล่ำทอง",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 60,
+    "employee_id": "000060",
+    "caster_id": "2593",
+    "name": "นายกฤษดา เรืองเกษม",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 61,
+    "employee_id": "000061",
+    "caster_id": "2613",
+    "name": "นายสมโภชน์  สารทรานนท์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 62,
+    "employee_id": "000062",
+    "caster_id": "2669",
+    "name": "นายจักพงษ์  ขุนวิเศษ",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 63,
+    "employee_id": "000063",
+    "caster_id": "2676",
+    "name": "สุทธิพงษ์ สาลีรอด",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 64,
+    "employee_id": "000064",
+    "caster_id": "2693",
+    "name": "นายคณิต  จำกัดภัย",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 65,
+    "employee_id": "000065",
+    "caster_id": "2694",
+    "name": "นายวัชรพล  ขวาของ",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 66,
+    "employee_id": "000066",
+    "caster_id": "2708",
+    "name": "นายนเรศ  ดัดวัฒน์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 67,
+    "employee_id": "000067",
+    "caster_id": "2750",
+    "name": "พิริยะ น้ำเย็น",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 68,
+    "employee_id": "000068",
+    "caster_id": "2756",
+    "name": "วงษ์ธรรม   แช่มหลง",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 69,
+    "employee_id": "000069",
+    "caster_id": "2779",
+    "name": "นายจักรพันธ์             ศิริ",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 70,
+    "employee_id": "000070",
+    "caster_id": "2785",
+    "name": "นายทศพร          ชัชวารี",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 71,
+    "employee_id": "000071",
+    "caster_id": "2798",
+    "name": "ธีรพัฒน์  สอนสวัสดิ์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 72,
+    "employee_id": "000072",
+    "caster_id": "2799",
+    "name": "นายพรชัย   จักษุอิทร์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 73,
+    "employee_id": "000073",
+    "caster_id": "2802",
+    "name": "วิเชียร ดอกไม้เพชร",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 74,
+    "employee_id": "000074",
+    "caster_id": "2805",
+    "name": "รัตนโกสินทร์   มาสวัสดิ์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 75,
+    "employee_id": "000075",
+    "caster_id": "2806",
+    "name": "ธราดล  วงษ์คำอุด",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 76,
+    "employee_id": "000076",
+    "caster_id": "2810",
+    "name": "พฤหัส    คำศรีไพร",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 77,
+    "employee_id": "000077",
+    "caster_id": "2811",
+    "name": "มนัส วารีชล",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 78,
+    "employee_id": "000078",
+    "caster_id": "2820",
+    "name": "มนู  บุญกุศล",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 79,
+    "employee_id": "000079",
+    "caster_id": "2823",
+    "name": "ประเสริฐ  ชีกว้าง",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 80,
+    "employee_id": "000080",
+    "caster_id": "2829",
+    "name": "นายพรรษา             โพธิ์ศรี",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 81,
+    "employee_id": "000081",
+    "caster_id": "2833",
+    "name": "ราเชน  หน่องพงษ์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 82,
+    "employee_id": "000082",
+    "caster_id": "2846",
+    "name": "นายกมล สุขเสริม",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 83,
+    "employee_id": "000083",
+    "caster_id": "2869",
+    "name": "นายสมโชค โสดานิล",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 84,
+    "employee_id": "000084",
+    "caster_id": "2870",
+    "name": "นายสามารถ คงวารี",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 85,
+    "employee_id": "000085",
+    "caster_id": "2871",
+    "name": "นายไพรัช อ่อนสุดใจ",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 86,
+    "employee_id": "000086",
+    "caster_id": "2872",
+    "name": "นายสมบูรณ์ สานคล่อง",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 87,
+    "employee_id": "000087",
+    "caster_id": "2873",
+    "name": "นายมานะชัย ทวดจันทึก",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 88,
+    "employee_id": "000088",
+    "caster_id": "2874",
+    "name": "นายสมพงษ์ ศรีฉาย",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 89,
+    "employee_id": "000089",
+    "caster_id": "2875",
+    "name": "นายธวัช ครุฑมณี",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 90,
+    "employee_id": "000090",
+    "caster_id": "2876",
+    "name": "นายสุรวัฒน์ เกิดแพร่",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 91,
+    "employee_id": "000091",
+    "caster_id": "2877",
+    "name": "นายอานนท์ ทีนาคะ",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 92,
+    "employee_id": "000092",
+    "caster_id": "4220",
+    "name": "นายเชาวลิต ยอดบุรุษ",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 93,
+    "employee_id": "000093",
+    "caster_id": "5477",
+    "name": "นายดา เฉลียวพงษ์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 94,
+    "employee_id": "000094",
+    "caster_id": "5744",
+    "name": "นายขวัญชัย สาทอง",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 95,
+    "employee_id": "000095",
+    "caster_id": "5989",
+    "name": "ภูวดล เสนาช่วย",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 96,
+    "employee_id": "000096",
+    "caster_id": "5990",
+    "name": "ภูวนัย เสนาช่วย",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 97,
+    "employee_id": "000097",
+    "caster_id": "6199",
+    "name": "นายณรงค์ ฉาไธสง",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 98,
+    "employee_id": "000098",
+    "caster_id": "6211",
+    "name": "นายสุรเดช เรืองวารี",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 99,
+    "employee_id": "000099",
+    "caster_id": "6341",
+    "name": "นางยุพา เพิ่มเพียร",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 100,
+    "employee_id": "000100",
+    "caster_id": "6346",
+    "name": "นายนพดล เปี่ยมพีชนะ",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 101,
+    "employee_id": "000101",
+    "caster_id": "6347",
+    "name": "นายสุทิน จุ่นเงิน",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 102,
+    "employee_id": "000102",
+    "caster_id": "6369",
+    "name": "นายสุรศักดิ์ สิงหา",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 103,
+    "employee_id": "000103",
+    "caster_id": "6377",
+    "name": "นายปองศักดิ์ ศรีเงินถม",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 104,
+    "employee_id": "000104",
+    "caster_id": "6385",
+    "name": "นายวิเชียร  นนตรี",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 105,
+    "employee_id": "000105",
+    "caster_id": "6391",
+    "name": "นายธีรภัทร์ ญาติวังกลุ่ม",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 106,
+    "employee_id": "000106",
+    "caster_id": "6405",
+    "name": "นายอรัญ คำพี",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 107,
+    "employee_id": "000107",
+    "caster_id": "6411",
+    "name": "นายมนตรี บัญกาที",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 108,
+    "employee_id": "000108",
+    "caster_id": "6418",
+    "name": "นายลิขิต ดาราภูมิ",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 109,
+    "employee_id": "000109",
+    "caster_id": "6430",
+    "name": "นายสมพงษ์ ใครอินทร์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 110,
+    "employee_id": "000110",
+    "caster_id": "6500",
+    "name": "นายฐาปกรณ์  นิลทลักษณ์",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 111,
+    "employee_id": "000111",
+    "caster_id": "6522",
+    "name": "นายเดี่ยว เกตุยา",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 112,
+    "employee_id": "000112",
+    "caster_id": "6542",
+    "name": "นายมนตรี จันทร์น้อย",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 113,
+    "employee_id": "000113",
+    "caster_id": "6569",
+    "name": "จิรนันท์ อนันตะโรจน์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 114,
+    "employee_id": "000114",
+    "caster_id": "7351",
+    "name": "นางสาวภัทราภรร์ จ่าชวด",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 115,
+    "employee_id": "000115",
+    "caster_id": "7355",
+    "name": "นายศุภกิจ สายม่วง",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 116,
+    "employee_id": "000116",
+    "caster_id": "7438",
+    "name": "สุมิตา สิงหา",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 117,
+    "employee_id": "000117",
+    "caster_id": "7449",
+    "name": "นายภูพิงค์ เทียนชอ",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 118,
+    "employee_id": "000118",
+    "caster_id": "7478",
+    "name": "สุกัญญา เฉยเจียม",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 119,
+    "employee_id": "000119",
+    "caster_id": "7487",
+    "name": "นายวรพล อุปมัย",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 120,
+    "employee_id": "000120",
+    "caster_id": "7499",
+    "name": "นายมงคลชัย คำมั่น",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 121,
+    "employee_id": "000121",
+    "caster_id": "7539",
+    "name": "นายวินัย จันทวี",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 122,
+    "employee_id": "000122",
+    "caster_id": "7566",
+    "name": "น.ส.สายใจ สมแฮ",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 123,
+    "employee_id": "000123",
+    "caster_id": "7567",
+    "name": "นายรุ่ง บัวจันทร์",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 124,
+    "employee_id": "000124",
+    "caster_id": "7593",
+    "name": "นายภูตะวัน แสงเงิน",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 125,
+    "employee_id": "000125",
+    "caster_id": "7606",
+    "name": "นายติไชย ทำดี",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 126,
+    "employee_id": "000126",
+    "caster_id": "7612",
+    "name": "นายรุ่ง โพชะกะ",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 127,
+    "employee_id": "000127",
+    "caster_id": "7614",
+    "name": "นายธนพล โค้งอาภาส",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 128,
+    "employee_id": "000128",
+    "caster_id": "7615",
+    "name": "เกวลิน ขอมอบกลาง",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 129,
+    "employee_id": "000129",
+    "caster_id": "8118",
+    "name": "นายชนะภัย อภิญญากุล",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 130,
+    "employee_id": "000130",
+    "caster_id": "8536",
+    "name": "สุนิสา  สีแก้ว",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 131,
+    "employee_id": "000131",
+    "caster_id": "8652",
+    "name": "นางสาวกุหลาบ  ลือพันธุ์",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 132,
+    "employee_id": "000132",
+    "caster_id": "1 / 1",
+    "name": "",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 133,
+    "employee_id": "000133",
+    "caster_id": "A041",
+    "name": "นายวรรณชนะ รักษาเจริญ",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 134,
+    "employee_id": "000134",
+    "caster_id": "A095",
+    "name": "นายปิยะพงษ์ บุญมี",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 135,
+    "employee_id": "000135",
+    "caster_id": "A100",
+    "name": "นายพงษ์ศักดิ์ สมพงษ์",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 136,
+    "employee_id": "000136",
+    "caster_id": "A133",
+    "name": "นายพงศกร สังฆมาน",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 137,
+    "employee_id": "000137",
+    "caster_id": "B003",
+    "name": "KHANT LIN KYAW",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 138,
+    "employee_id": "000138",
+    "caster_id": "B004",
+    "name": "SINE MYAT THU",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 139,
+    "employee_id": "000139",
+    "caster_id": "X042",
+    "name": "นายเอกนรินทร์ ลีพุด",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 140,
+    "employee_id": "000140",
+    "caster_id": "Y022",
+    "name": "นายครินทร์  หิงวัน",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 141,
+    "employee_id": "000141",
+    "caster_id": "Y026",
+    "name": "นายธนบดี  ทองสุข",
+    "factories": [
+      "SNK1",
+      "SNK2"
+    ]
+  },
+  {
+    "id": 142,
+    "employee_id": "000142",
+    "caster_id": "Y027",
+    "name": "ทองดี จรมา",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 143,
+    "employee_id": "000143",
+    "caster_id": "Z010",
+    "name": "นายจักรกริศน์ รักไทย",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 144,
+    "employee_id": "000144",
+    "caster_id": "Z011",
+    "name": "นายสำเริง ศิริมา",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 145,
+    "employee_id": "000145",
+    "caster_id": "Z012",
+    "name": "นายเอกริน พรหมแสง",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 146,
+    "employee_id": "000146",
+    "caster_id": "Z059",
+    "name": "นายเก่ง พรมเสนสา",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 147,
+    "employee_id": "000147",
+    "caster_id": "Z065",
+    "name": "นายเจนณรงค์ อยู่หนู",
+    "factories": [
+      "SNK1"
+    ]
+  },
+  {
+    "id": 148,
+    "employee_id": "000148",
+    "caster_id": "Z066",
+    "name": "นายสิทธิชัย เกตุสุวรรณ",
+    "factories": [
+      "SNK1"
+    ]
+  }
+]
