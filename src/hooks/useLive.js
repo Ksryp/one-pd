@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 
 const USE_API = import.meta.env.VITE_USE_API === 'true'
 const BASE_WS = (import.meta.env.VITE_API_BASE_URL ?? '')
+  .replace(/\/+$/, '')
   .replace('https://', 'wss://')
   .replace('http://', 'ws://')
 
