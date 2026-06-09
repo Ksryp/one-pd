@@ -75,7 +75,7 @@ def get_notifications(db: Session, limit: int = 20) -> list[dict]:
 # ── Yield ─────────────────────────────────────────────────────────────────────
 def get_yield(db: Session, type_: str) -> dict:
     if type_ == "firing":
-        # Pieces that went through kiln (non-empty klin_key)
+        # All QR scan records = firing/kiln inspection
         sql = """
             SELECT
                 COUNT(*) FILTER (WHERE result_work = 'Good') AS good,
@@ -83,12 +83,11 @@ def get_yield(db: Session, type_: str) -> dict:
                 COUNT(*) FILTER (WHERE result_work = 'Bad')  AS scrap,
                 COUNT(*) AS total
             FROM fact_qr_scan
-            WHERE klin_key IS NOT NULL AND klin_key != ''
         """
         title = "FIRING YIELD"
         target = 85.0
     else:
-        # Clay: all inspected pieces
+        # Clay yield has no real data — this path is kept for completeness
         sql = """
             SELECT
                 COUNT(*) FILTER (WHERE result_work = 'Good') AS good,
@@ -102,11 +101,13 @@ def get_yield(db: Session, type_: str) -> dict:
 
     row = db.execute(text(sql)).fetchone()
     good, repair, scrap, total = (row[0] or 0, row[1] or 0, row[2] or 0, row[3] or 1)
-    yield_pct = round(good / total * 100, 1) if total else 0.0
+    value_total = round((good + repair) / total * 100, 1) if total else 0.0
+    value_once  = round(good / total * 100, 1) if total else 0.0
 
     return {
         "title": title,
-        "value": yield_pct,
+        "value_total": value_total,
+        "value_once":  value_once,
         "segments": [
             {"label": "Good",   "value": good,   "color": "#16A34A"},
             {"label": "Repair", "value": repair,  "color": "#D97706"},

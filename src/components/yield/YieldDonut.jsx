@@ -19,11 +19,20 @@ const CustomTooltip = ({ active, payload }) => {
   )
 }
 
-export default function YieldDonut({ title, value, segments, target, headerAction }) {
+const CALC_MODES = [
+  { key: 'total',     label: 'Total',     desc: '(Good+RF)/Total' },
+  { key: 'once_fire', label: 'Once Fire', desc: 'Good/Total'      },
+]
+
+export default function YieldDonut({ title, value_total, value_once, segments, target, headerAction }) {
   const [hovered, setHovered] = useState(false)
+  const [calcMode, setCalcMode] = useState('total')
+  const [modeOpen, setModeOpen] = useState(false)
   const navigate = useNavigate()
+
+  const value = calcMode === 'total' ? value_total : value_once
   const isAboveTarget = value >= target
-  const diff = value - target
+  const diff = parseFloat((value - target).toFixed(1))
   const ctaColor = isAboveTarget ? '#16A34A' : '#DC2626'
 
   return (
@@ -40,11 +49,34 @@ export default function YieldDonut({ title, value, segments, target, headerActio
           <h3 className="text-[12px] font-bold tracking-widest text-[var(--text-primary)] uppercase m-0">
             {title}
           </h3>
-          {headerAction && (
-            <div onClick={e => e.stopPropagation()} className="relative z-10">
-              {headerAction}
+          <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+            {/* Calc mode toggle */}
+            <div className="relative">
+              <button
+                onClick={() => setModeOpen(o => !o)}
+                className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
+              >
+                {CALC_MODES.find(m => m.key === calcMode)?.label}
+                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              {modeOpen && (
+                <div className="absolute right-0 top-7 z-20 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg shadow-xl overflow-hidden min-w-[120px]">
+                  {CALC_MODES.map(m => (
+                    <button
+                      key={m.key}
+                      onClick={() => { setCalcMode(m.key); setModeOpen(false) }}
+                      className={`w-full text-left px-3 py-2 transition-colors
+                        ${m.key === calcMode ? 'text-[var(--accent)] font-bold bg-[var(--accent-light)]' : 'text-[var(--text-primary)] hover:bg-[var(--accent-light)] hover:text-[var(--accent)]'}`}
+                    >
+                      <p className="text-[11px] font-semibold">{m.label}</p>
+                      <p className="text-[10px] text-[var(--text-secondary)]">{m.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+            {headerAction && <div className="relative z-10">{headerAction}</div>}
+          </div>
         </div>
 
         <div className="flex items-center gap-4">
@@ -95,7 +127,7 @@ export default function YieldDonut({ title, value, segments, target, headerActio
         <div className={`mt-3 flex items-center justify-between transition-all duration-300 ${hovered ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'}`}>
           <span className="text-[11px] text-[var(--text-secondary)]">Target: {target}%</span>
           <span className={`text-[11px] font-bold tabular-nums ${isAboveTarget ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
-            {isAboveTarget ? `▲ ${diff}%` : `▼ ${Math.abs(diff)}%`}
+            {isAboveTarget ? `▲ +${diff}%` : `▼ ${diff}%`}
           </span>
         </div>
       </div>

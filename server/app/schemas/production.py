@@ -70,7 +70,8 @@ class YieldSegment(BaseModel):
 
 class YieldOut(BaseModel):
     title: str
-    value: float
+    value_total: float   # (Good + RF) / Total
+    value_once: float    # Good / Total
     segments: list[YieldSegment]
     target: float
 

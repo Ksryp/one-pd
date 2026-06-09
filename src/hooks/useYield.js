@@ -8,9 +8,11 @@ const COLORS = { Good: '#16A34A', Repair: '#D97706', Scrap: '#DC2626' }
 
 function fromMock(type) {
   const m = mockData[type]
+  const total = m.good + m.repair + m.scrap
   return {
     title: type === 'clay' ? 'CLAY YIELD' : 'FIRING YIELD',
-    value: m.value,
+    value_total: total ? Math.round((m.good + m.repair) / total * 1000) / 10 : 0,
+    value_once:  total ? Math.round(m.good / total * 1000) / 10 : 0,
     segments: [
       { label: 'Good',   value: m.good,   color: COLORS.Good   },
       { label: 'Repair', value: m.repair, color: COLORS.Repair },
@@ -22,11 +24,12 @@ function fromMock(type) {
 
 export function useYield(type = 'clay', interval = 120_000) {
   const [data, setData] = useState(() => fromMock(type))
-  const [loading, setLoading] = useState(USE_API)
+  const [loading, setLoading] = useState(USE_API && type !== 'clay')
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    if (!USE_API) { setData(fromMock(type)); return }
+    // Clay yield has no real data source yet — always use mock
+    if (!USE_API || type === 'clay') { setData(fromMock(type)); return }
     let active = true
     const fetch_ = async () => {
       try {

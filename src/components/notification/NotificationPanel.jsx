@@ -42,7 +42,8 @@ export default function NotificationPanel() {
         <YieldDonut
           title={clayYield.title}
           headerAction={<ViewSelector value={yieldView} onChange={setYieldView} />}
-          value={clayYield.value}
+          value_total={clayYield.value_total}
+          value_once={clayYield.value_once}
           segments={clayYield.segments}
           target={clayYield.target}
         />
@@ -55,7 +56,8 @@ export default function NotificationPanel() {
         <YieldDonut
           title={firingYield.title}
           headerAction={<ViewSelector value={yieldView} onChange={setYieldView} />}
-          value={firingYield.value}
+          value_total={firingYield.value_total}
+          value_once={firingYield.value_once}
           segments={firingYield.segments}
           target={firingYield.target}
         />
