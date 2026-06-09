@@ -1,8 +1,8 @@
 # Secrets
 gittoken.txt
 
-# DB seed data — large files, not needed for build
-data/
+# DB seed data — large files, not needed for build (root-level only)
+/data/
 
 # Dependencies
 node_modules/
@@ -14,6 +14,8 @@ dist/
 .env
 .env.local
 .env.*.local
+.env.development
+.env.production
 !.env.example
 
 # Large data files — tracked via Git LFS (see .gitattributes)

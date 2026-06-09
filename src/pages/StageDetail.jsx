@@ -1,6 +1,58 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { stageParams } from '../data/mock'
 import { STATUS_COLORS as STATUS_MAP } from '../constants/status'
+
+const stageParams = {
+  "slip-prep": {
+    title: "Body Slip Preparation",
+    params: [
+      { key: "viscosity_v0",  label: "Viscosity V0",    value: 940,  unit: "cP",      ucl: 900,  lcl: 700,  status: "EMERGENCY" },
+      { key: "viscosity_v30", label: "Viscosity V30",   value: 820,  unit: "cP",      ucl: 880,  lcl: 680,  status: "NORMAL"    },
+      { key: "concentration", label: "Concentration",   value: 1.62, unit: "g/cm³",   ucl: 1.68, lcl: 1.58, status: "NORMAL"    },
+      { key: "temperature",   label: "Temperature",     value: 28.5, unit: "°C",      ucl: 32,   lcl: 24,   status: "NORMAL"    },
+      { key: "casting_rate",  label: "Casting Rate",    value: 58,   unit: "pcs/hr",  ucl: 65,   lcl: 50,   status: "NORMAL"    },
+    ],
+  },
+  "glaze-prep": {
+    title: "Glaze Slip Preparation",
+    params: [
+      { key: "particle_size", label: "% Particle Size", value: 3.2,  unit: "%",    ucl: 4.0,  lcl: 2.0,  status: "NORMAL" },
+      { key: "concentration", label: "Concentration",   value: 1.44, unit: "g/L",  ucl: 1.50, lcl: 1.38, status: "NORMAL" },
+      { key: "viscosity_v0",  label: "Viscosity V0",    value: 760,  unit: "cP",   ucl: 850,  lcl: 650,  status: "NORMAL" },
+      { key: "residue",       label: "% Residue",       value: 0.8,  unit: "%",    ucl: 1.5,  lcl: 0.2,  status: "NORMAL" },
+    ],
+  },
+  "casting": {
+    title: "Casting",
+    params: [
+      { key: "mold_cycle",  label: "Mold Cycle",      value: 38,  unit: "min",     ucl: 32,  lcl: 24,  status: "ABNORMAL" },
+      { key: "mold_no",     label: "Active Molds",    value: 147, unit: "molds",   ucl: 160, lcl: 100, status: "NORMAL"   },
+      { key: "caster_no",   label: "Active Casters",  value: 12,  unit: "casters", ucl: 14,  lcl: 8,   status: "NORMAL"   },
+    ],
+  },
+  "drying": {
+    title: "Drying",
+    params: [
+      { key: "moisture",     label: "% Moisture Content", value: 13.2, unit: "%", ucl: 15,  lcl: 8,  status: "NORMAL" },
+      { key: "drying_curve", label: "Drying Curve",       value: 98.5, unit: "%", ucl: 100, lcl: 92, status: "NORMAL" },
+    ],
+  },
+  "spraying": {
+    title: "Spraying",
+    params: [
+      { key: "thickness",  label: "Glaze Thickness", value: 0.42, unit: "mm",    ucl: 0.50, lcl: 0.35, status: "NORMAL" },
+      { key: "sprayer_no", label: "Active Sprayers", value: 4,    unit: "units", ucl: 5,    lcl: 2,    status: "NORMAL" },
+      { key: "robot_no",   label: "Active Robots",   value: 3,    unit: "units", ucl: 4,    lcl: 2,    status: "NORMAL" },
+    ],
+  },
+  "firing": {
+    title: "Firing",
+    params: [
+      { key: "temperature",  label: "Temperature",  value: 1238, unit: "°C", ucl: 1280, lcl: 1180, status: "NORMAL" },
+      { key: "firing_cycle", label: "Firing Cycle", value: 18.5, unit: "hr", ucl: 20,   lcl: 16,   status: "NORMAL" },
+      { key: "weight",       label: "Piece Weight", value: 3.82, unit: "kg", ucl: 4.10, lcl: 3.50, status: "NORMAL" },
+    ],
+  },
+}
 
 function GaugeParam({ param }) {
   const { label, value, unit, ucl, lcl, status } = param

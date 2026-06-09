@@ -9,7 +9,7 @@ const VIEWS = ['Day', 'Week', 'Month', 'Year']
 
 export default function NotificationPanel() {
   const [yieldView, setYieldView] = useState('Day')
-  const { data: notifications } = useNotifications()
+  const { data: notifications, loading: notifLoading, error: notifError } = useNotifications()
   const { data: clayYield }    = useYield('clay')
   const { data: firingYield }  = useYield('firing')
   const { data: metrics }      = useMetrics()
@@ -30,9 +30,15 @@ export default function NotificationPanel() {
       </div>
 
       <div className="mb-5">
-        {notifications.map(n => (
-          <AlertCard key={n.id} {...n} />
-        ))}
+        {notifLoading && notifications.length === 0 ? (
+          [1, 2, 3].map(i => (
+            <div key={i} className="h-12 rounded-lg bg-[var(--border)] animate-pulse mb-2" />
+          ))
+        ) : notifError && notifications.length === 0 ? (
+          <p className="text-[11px] text-[#991B1B] text-center py-4">ไม่สามารถโหลดข้อมูลได้</p>
+        ) : (
+          notifications.map(n => <AlertCard key={n.id} {...n} />)
+        )}
       </div>
 
       <div className="h-px bg-[var(--border)] mb-5" />

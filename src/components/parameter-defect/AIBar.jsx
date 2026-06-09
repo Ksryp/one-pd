@@ -1,11 +1,17 @@
 import { useState } from 'react'
-import { parameterDefect } from '../../data/mock'
+import { useParameterDefect } from '../../hooks/useParameterDefect'
+
+const FALLBACK_INSIGHT = {
+  text: 'กำลังวิเคราะห์ข้อมูล — รอผลจาก AI model...',
+  confidence: 0,
+}
 
 export default function AIBar() {
   const [model, setModel] = useState('Gemini 1.5 Pro')
   const [interval, setInterval] = useState('1H')
   const [confidence, setConfidence] = useState('80')
-  const { aiInsight } = parameterDefect.insights
+  const { insights } = useParameterDefect()
+  const aiInsight = insights?.aiInsight ?? FALLBACK_INSIGHT
 
   const models = ['Gemini 1.5 Pro', 'GPT-4o', 'Claude 3.5 Sonnet', 'Custom SNK Model']
   const intervals = ['1H', '4H', '8H', 'Day', 'Week', 'Month', 'Year']
