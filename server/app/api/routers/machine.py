@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.db.session import get_tsdb_db
-from app.crud.production import get_machine_latest, get_machine_timeseries
+from app.db.session import get_tsdb_db, get_pg_db
+from app.crud.production import get_machine_latest, get_machine_timeseries, get_defects_hourly
 from app.schemas.production import MachineLatest, MachineTimeseries, MachinePoint
 
 router = APIRouter(prefix="/api/machine", tags=["machine"])
@@ -23,3 +23,8 @@ def machine_timeseries(
         points=[MachinePoint(**p) for p in points],
         has_data=len(points) > 0,
     )
+
+
+@router.get("/defects/hourly")
+def defects_hourly(db: Session = Depends(get_pg_db)):
+    return get_defects_hourly(db)

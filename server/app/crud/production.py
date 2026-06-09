@@ -174,31 +174,52 @@ def get_defect_summary(db: Session, days: int = 30) -> list[dict]:
 # ── Machine timeseries (TimescaleDB) ─────────────────────────────────────────
 def get_machine_latest(tsdb_session: Session) -> dict | None:
     row = tsdb_session.execute(text("""
-        SELECT time, "MCRIM","MCENG","MCSKR","MAP","VolST",
-               "STemp","WTemp","CT_AVG_Cur","CT_MC_Cur","ClayGood"
+        SELECT time, mcrim, mceng, mcskr, map, volst,
+               stemp, wtemp, ct_avg_cur, ct_mc_cur, claygood
         FROM hpc_shell_2
         ORDER BY time DESC LIMIT 1
     """)).fetchone()
     if row is None:
         return None
-    keys = ["time","MCRIM","MCENG","MCSKR","MAP","VolST","STemp","WTemp","CT_AVG_Cur","CT_MC_Cur","ClayGood"]
+    keys = ["time","mcrim","mceng","mcskr","map","volst","stemp","wtemp","ct_avg_cur","ct_mc_cur","claygood"]
     d = dict(zip(keys, row))
     d["time"] = d["time"].isoformat() if d["time"] else None
     return d
+
+
+def get_defects_hourly(db: Session) -> list[dict]:
+    """Hourly defect counts from the most recent active day in fact_qr_scan."""
+    rows = db.execute(text("""
+        WITH latest_day AS (
+            SELECT DATE_TRUNC('day', scanned_at)::date AS day
+            FROM fact_qr_scan
+            GROUP BY 1 HAVING COUNT(*) > 10
+            ORDER BY 1 DESC LIMIT 1
+        )
+        SELECT
+            to_char(date_trunc('hour', scanned_at), 'HH24:MI')         AS hour,
+            COUNT(*)                                                      AS total,
+            COUNT(*) FILTER (WHERE result_work NOT IN ('Good', 'RF'))   AS defects
+        FROM fact_qr_scan
+        WHERE DATE_TRUNC('day', scanned_at)::date = (SELECT day FROM latest_day)
+        GROUP BY date_trunc('hour', scanned_at)
+        ORDER BY date_trunc('hour', scanned_at)
+    """)).fetchall()
+    return [{"hour": r[0], "total": int(r[1]), "defects": int(r[2])} for r in rows]
 
 
 def get_machine_timeseries(tsdb_session: Session, hours: int = 24) -> list[dict]:
     rows = tsdb_session.execute(text(f"""
         SELECT
             to_char(date_trunc('hour', time), 'HH24:MI') AS hour,
-            ROUND(AVG("CT_AVG_Cur")::numeric, 2)          AS viscosity,
-            ROUND(AVG("CT_MC_Cur")::numeric, 2)           AS viscosity_v30,
-            ROUND(AVG("STemp")::numeric, 2)               AS temperature,
-            ROUND(AVG("VolST")::numeric, 2)               AS moisture,
-            ROUND(AVG("MCRIM")::numeric, 2)               AS mcrim,
-            ROUND(AVG("MCENG")::numeric, 2)               AS mceng,
-            ROUND(AVG("MAP")::numeric, 2)                 AS map_val,
-            COUNT(*)                                       AS samples
+            ROUND(AVG(ct_avg_cur)::numeric, 2)           AS viscosity,
+            ROUND(AVG(ct_mc_cur)::numeric, 2)            AS viscosity_v30,
+            ROUND(AVG(stemp)::numeric, 2)                AS temperature,
+            ROUND(AVG(volst)::numeric, 2)                AS moisture,
+            ROUND(AVG(mcrim)::numeric, 2)                AS mcrim,
+            ROUND(AVG(mceng)::numeric, 2)                AS mceng,
+            ROUND(AVG(map)::numeric, 2)                  AS map_val,
+            COUNT(*)                                      AS samples
         FROM hpc_shell_2
         WHERE time >= NOW() - INTERVAL '{hours} hours'
         GROUP BY date_trunc('hour', time)

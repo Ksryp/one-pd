@@ -17,15 +17,38 @@ export function useMachineData(hours = 24, interval = 60_000) {
 
     const fetch_ = async () => {
       try {
-        const [ts, lat] = await Promise.all([
+        const [ts, defects, lat] = await Promise.all([
           api.get(`/api/machine/timeseries?hours=${hours}`),
+          api.get('/api/machine/defects/hourly').catch(() => []),
           api.get('/api/machine/latest').catch(() => null),
         ])
         if (!active) return
+
+        // Build defect lookup: { "08:00": 12, ... }
+        const defectMap = Object.fromEntries(
+          (defects || []).map(d => [d.hour, d.defects])
+        )
+
         if (ts.has_data && ts.points.length > 0) {
-          setTimeseries(ts.points)
+          // Real machine data — merge in defect counts
+          setTimeseries(ts.points.map(p => ({
+            ...p,
+            defect: defectMap[p.hour] ?? 0,
+          })))
           setHasRealData(true)
+        } else if (defects && defects.length > 0) {
+          // No machine data yet — use mock params but real defect bars
+          const mockByHour = Object.fromEntries(
+            parameterDefect.timeseries.map((p, i) => [p.hour, i])
+          )
+          setTimeseries(
+            defects.map(d => {
+              const mockPt = parameterDefect.timeseries[mockByHour[d.hour]] || {}
+              return { ...mockPt, hour: d.hour, defect: d.defects }
+            })
+          )
         }
+
         if (lat) setLatest(lat)
       } catch (_) {}
     }
